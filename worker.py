@@ -3,7 +3,7 @@ import json
 
 import aioredis
 
-from aio_redis_taskq.main import *
+from aiotaskq.main import *
 
 REDIS_URL = "redis://127.0.0.1:6379"
 TASKS_CHANNEL = "channel:tasks"

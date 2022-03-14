@@ -8,7 +8,7 @@
             "name": "Main",
             "type": "python",
             "request": "launch",
-            "program": "./aio_redis_taskq/main.py",
+            "program": "./aiotaskq/main.py",
             "console": "integratedTerminal"
         },
         {
