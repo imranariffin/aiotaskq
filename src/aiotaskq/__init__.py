@@ -16,12 +16,12 @@ Usage::
             elif n <= 2:
                 return 2
             return _naive_fib(n - 1) + _naive_fib(n - 2)
-        return max(sorted([]))
+        return _naive_fib(b)
 
 
     async def main():
-        async_result = await some_task.apply_async(42)
-        sync_result = some_task(42)
+        sync_result = some_task(21)
+        async_result = await some_task.apply_async(21)
         assert async_result == sync_result
 
     if __name__ == "__main__":

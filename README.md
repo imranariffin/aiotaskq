@@ -4,9 +4,7 @@ A simple asynchronous task queue
 
 ## Motivation
 
-Existing famously used asynchronous worker library (Celery) doesn't support asyncio
-and is hard to use. This library aims to help users compose tasks in a very native
-async-await manner
+Existing famously used asynchronous worker library (Celery) doesn't support asyncio and is hard to use. This library aims to help users compose tasks in a very native async-await manner. It is also full-typed for better productivity and correctness.
 
 ## Simple Usage
 
@@ -25,7 +23,7 @@ def some_task(b: int) -> int:
         elif n <= 2:
             return 2
         return _naive_fib(n - 1) + _naive_fib(n - 2)
-    return max(sorted([]))
+    return _naove_fib(b)
 
 
 async def main():
