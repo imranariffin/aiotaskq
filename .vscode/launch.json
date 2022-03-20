@@ -8,15 +8,25 @@
             "name": "Main",
             "type": "python",
             "request": "launch",
-            "program": "./aiotaskq/main.py",
+            "program": "./src/aiotaskq/main.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Test",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/aiotaskq/tests/test_app.py",
             "console": "integratedTerminal"
         },
         {
             "name": "Worker",
             "type": "python",
             "request": "launch",
-            "program": "./worker.py",
-            "console": "integratedTerminal"
+            "program": "./src/aiotaskq/worker.py",
+            "console": "integratedTerminal",
+            "args": [
+                "aiotaskq.main"
+            ]
         }
     ]
 }

@@ -1,23 +1,18 @@
 import asyncio
 import importlib
 import json
+import types
 
 import aioredis
+import typer
 
-from aiotaskq.main import *
+from aiotaskq.constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
 
-REDIS_URL = "redis://127.0.0.1:6379"
-TASKS_CHANNEL = "channel:tasks"
-RESULTS_CHANNEL_TEMPLATE = "channel:results:{task_id}"
-
-
-def some_task():
-    print("Doing some task!")
+cli = typer.Typer()
 
 
-async def worker():
-
-    app = importlib.import_module("aiotaskq.main")
+async def worker(app_import_path: str):
+    app: types.ModuleType = importlib.import_module(app_import_path)
 
     redis_client = aioredis.from_url(REDIS_URL)
     async with redis_client.pubsub() as pubsub:
@@ -37,9 +32,13 @@ async def worker():
             task_result = task_func(*task_args, **task_kwargs)
             task_result = json.dumps(task_result)
             await redis_client.publish(RESULTS_CHANNEL_TEMPLATE.format(task_id=task_id), message=task_result)
-            
+
+
+@cli.command()
+def main(app: str):
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(worker(app_import_path=app))
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(worker())
+    cli()
