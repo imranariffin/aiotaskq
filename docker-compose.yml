@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+    redis:
+        image: "redis"
+        expose:
+            - "6379"
+        ports:
+            - "127.0.0.1:6379:6379"
+    
+    rcli:
+        image: "redis"
+        links:
+            - redis
+        command: redis-cli -h redis
+        depends_on: 
+            - redis
