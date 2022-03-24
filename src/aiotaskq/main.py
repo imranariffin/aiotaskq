@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import typing as t
 import uuid
 
@@ -8,10 +9,11 @@ from aiotaskq.exceptions import WorkerNotReady
 
 import aioredis
 
-
-
 RT = t.TypeVar("RT")
 P = t.ParamSpec("P")
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class AsyncResult(t.Generic[RT]):
@@ -21,19 +23,19 @@ class AsyncResult(t.Generic[RT]):
 
     def __init__(self, task_id: str) -> None:
         self._task_id = task_id
-    
+
     async def get(self) -> RT:
         redis_client = aioredis.from_url(REDIS_URL)
         async with redis_client.pubsub() as pubsub:
-            # await pubsub.subscribe(RESULTS_CHANNEL_TEMPLATE.format(task_id=self._task_id))
-            _result: RT
-            result = None
-            while result is None:
-                await pubsub.subscribe(RESULTS_CHANNEL_TEMPLATE.format(task_id=self._task_id))
-                result = await pubsub.get_message(ignore_subscribe_messages=True)
+            message: t.Optional[dict] = None
+            while message is None:
+                await pubsub.subscribe(
+                    RESULTS_CHANNEL_TEMPLATE.format(task_id=self._task_id)
+                )
+                message = await pubsub.get_message(ignore_subscribe_messages=True)
                 await asyncio.sleep(0.1)
-            print(result)
-            _result = json.loads(result["data"])
+            logger.debug("Message: %s", message)
+            _result: RT = json.loads(message["data"])
         return _result
 
 
@@ -47,7 +49,7 @@ class Task(t.Generic[P, RT]):
 
     def __call__(self, *args, **kwargs) -> RT:
         return self._f(*args, **kwargs)
-    
+
     def get_task_id(self) -> str:
         return f"{self.__qualname__}:{self._id}"
 
@@ -56,7 +58,7 @@ class Task(t.Generic[P, RT]):
         message = json.dumps(
             {
                 "task_id": task_id,
-                "args": args, 
+                "args": args,
                 "kwargs": kwargs,
             }
         )
@@ -64,8 +66,10 @@ class Task(t.Generic[P, RT]):
 
         is_worker_ready = (await publisher.pubsub_numsub(TASKS_CHANNEL))[0][1] > 0
         if not is_worker_ready:
-            raise WorkerNotReady("No worker is ready to pick up tasks. Have you run your workers?")
-    
+            raise WorkerNotReady(
+                "No worker is ready to pick up tasks. Have you run your workers?"
+            )
+
         await publisher.publish(TASKS_CHANNEL, message=message)
         async_result: AsyncResult[RT] = AsyncResult(task_id=task_id)
         result = await async_result.get()
@@ -74,9 +78,10 @@ class Task(t.Generic[P, RT]):
 
 def register_task(f: t.Callable[P, RT]) -> Task[P, RT]:
     import inspect
+
     func_module = inspect.getmodule(f)
     module_path = ".".join(
-        [p.split(".py")[0] for p in func_module.__file__.strip("./").split("/") if p != "src"] # type: ignore
+        [p.split(".py")[0] for p in func_module.__file__.strip("./").split("/") if p != "src"]  # type: ignore
     )
     task = Task[P, RT](f)
     task.__qualname__ = f"{module_path}.{f.__name__}"

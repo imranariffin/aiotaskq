@@ -32,6 +32,4 @@ Usage::
 from .main import register_task
 
 
-__all__ = [
-    "register_task"
-]
+__all__ = ["register_task"]
