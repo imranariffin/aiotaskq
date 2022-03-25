@@ -3,6 +3,7 @@ from asyncio import get_event_loop
 import aiotaskq
 from aiotaskq.worker import worker
 
+
 @aiotaskq.register_task
 def add(x: int, y: int) -> int:
     return x + y
@@ -10,7 +11,7 @@ def add(x: int, y: int) -> int:
 
 @aiotaskq.register_task
 def power(a: int, b: int = 1) -> int:
-    return a ** b
+    return a**b
 
 
 @aiotaskq.register_task
@@ -27,10 +28,12 @@ def some_task(b: int) -> int:
         elif n <= 2:
             return 2
         return _naive_fib(n - 1) + _naive_fib(n - 2)
+
     return _naive_fib(b)
 
 
 if __name__ == "__main__":
+
     async def main():
         sync_result = add(x=41, y=1)
         async_result = await add.apply_async(x=41, y=1)
