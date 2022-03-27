@@ -4,7 +4,11 @@ A simple asynchronous task queue
 
 ## Motivation
 
-Existing famous asynchronous worker library (Celery) doesn't support asyncio and is hard to use. This library aims to help users compose tasks in a very native async-await manner. It is also full-typed for better productivity and correctness.
+Famous existing asynchronous worker library (Celery) doesn't support asyncio and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
+
+Plus, it is also fully-typed for better productivity and correctness.
+
+Give it a try and let us know if you like it. For questions or feedback feel to file issues on this repository.
 
 ## Example Usage
 Install aiotaskq
@@ -30,10 +34,10 @@ import aiotaskq
 def some_task(b: int) -> int:
     # Some task with high cpu usage
     def _naive_fib(n: int) -> int:
-        if n <= 1:
-            return 1
+        if n <= 0:
+            return 0
         elif n <= 2:
-            return 2
+            return 1
         return _naive_fib(n - 1) + _naive_fib(n - 2)
     return _naive_fib(b)
 
@@ -60,13 +64,106 @@ python -m aiotaskq worker app.app
 Then in another different terminal, run your app
 ```bash
 python ./app.py
-# Output: sync_result == async_result == {42}. Awesome!
+# Output: sync_result == async_result == 165580141. Awesome!
 ```
 
-## Advance usage
+## Advanced usage example
+Let's say we want to compose a workflow where we want to break up some of the tasks and run them in parallel:
+```
+                    |-- task_2 --> |
+                    |-- task_2 --> |     | task_3 --> |
+START -> task_1 --> |-- task_2 --> | --> | task_3 --> | --> task_4 --> FINISH
+                    |-- task_2 --> |     | task_3 --> |
+                    |-- task_2 --> |
+```
 
+Using `celery` we might end up with this
 ```python
-# TODO: Example of composing chain of tasks (chord + chain in Celery terms)
+from celery import Celery
+
+app = Celery()
+
+
+@app.task
+def task_1(*args, **kwargs):
+        pass
+
+
+@app.task
+def task_2(*args, **kwargs):
+        pass
+
+
+@app.task
+def task_3(*args, **kwargs):
+        pass
+
+
+@app.task
+def task_4(*args, **kwargs):
+        pass
+
+
+if __name__ == "__main__":
+    step_1 = task_1.si(some_arg="a")
+    step_2 = [task_2.si(some_arg=f"{i}") for i in range(5)]
+    step_3 = [task_3.si(some_arg=f"{i}") for i in range(3)]
+    step_4 = task_4.si(some_arg="b")
+    workflow = chord(
+        header=step_1,
+        body=chord(
+            header=step_2,
+            body=chord(
+                header=step_3,
+                body=step_4,
+            ),
+        ),
+    )
+    output = workflow.apply_async().get()
+    print(output)
+```
+
+Using `aiotaskq` we may end up with the following:
+```python
+import asyncio
+
+from aiotaskq import register_task
+
+
+@register_task
+def task_1(*args, **kwargs):
+        pass
+
+
+@register_task
+def task_2(*args, **kwargs):
+        pass
+
+
+@register_task
+def task_3(*args, **kwargs):
+        pass
+
+
+@register_task
+def task_4(*args, **kwargs):
+        pass
+
+
+# So far the same as celery
+
+# And now the workflow is just native python, and you're free
+# to use any `asyncio` library of your choice to help with composing
+# your workflow e.g. `trio` to handle more advanced scenarios like
+# error propagation, task cancellation etc.
+if __name__ == "__main__":
+    step_1 = task_1.apply_async()
+    step_2 = asyncio.gather(task_2.apply_async(arg=f"{i}" for i in range(5)))
+    step_3 = asyncio.gather(task_3.apply_async(arg=f"{i}" for i in range(3)))
+    step_4 = task_4.apply_async()
+    workflow = [step_1, step_2, step_3, step_4]
+    output = await asyncio.gather(workflow)
+    print(output)
 ```
 
 ## Install
