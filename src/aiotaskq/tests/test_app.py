@@ -1,4 +1,5 @@
 from asyncio import get_event_loop
+import unittest
 
 import aiotaskq
 from aiotaskq.worker import worker
@@ -32,23 +33,30 @@ def some_task(b: int) -> int:
     return _naive_fib(b)
 
 
-if __name__ == "__main__":
+class TestApp(unittest.TestCase):
+    def setUp(self) -> None:
+        self.loop = get_event_loop()
+        self.worker_task = self.loop.create_task(worker("aiotaskq.tests.test_app"))
 
-    async def main():
-        sync_result = add(x=41, y=1)
-        async_result = await add.apply_async(x=41, y=1)
-        assert async_result == sync_result, f"{async_result} != {sync_result}"
-        sync_result = power(2, b=64)
-        async_result = await power.apply_async(2, b=64)
-        assert async_result == sync_result, f"{async_result} != {sync_result}"
-        sync_result = join([2021, 2, 20])
-        async_result = await join.apply_async([2021, 2, 20])
-        assert async_result == sync_result, f"{async_result} != {sync_result}"
-        sync_result = some_task(21)
-        async_result = await some_task.apply_async(21)
-        assert async_result == sync_result, f"{async_result} != {sync_result}"
+    def tearDown(self) -> None:
+        self.worker_task.cancel()
 
-    loop = get_event_loop()
-    t = loop.create_task(worker("aiotaskq.tests.test_app"))
-    loop.run_until_complete(main())
-    t.cancel()
+    def test_parity_with_sync(self):
+        """
+        Assert that async version of the task returns the same output as the sync version.
+        """
+        async def main():
+            sync_result = add(x=41, y=1)
+            async_result = await add.apply_async(x=41, y=1)
+            assert async_result == sync_result, f"{async_result} != {sync_result}"
+            sync_result = power(2, b=64)
+            async_result = await power.apply_async(2, b=64)
+            assert async_result == sync_result, f"{async_result} != {sync_result}"
+            sync_result = join([2021, 2, 20])
+            async_result = await join.apply_async([2021, 2, 20])
+            assert async_result == sync_result, f"{async_result} != {sync_result}"
+            sync_result = some_task(21)
+            async_result = await some_task.apply_async(21)
+            assert async_result == sync_result, f"{async_result} != {sync_result}"
+
+        self.loop.run_until_complete(main())

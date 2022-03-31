@@ -14,8 +14,13 @@
         {
             "name": "Test",
             "type": "python",
+            "module": "unittest",
+            "args": [
+                "discover",
+                "--start-directory",
+                "./src/aiotaskq/tests"
+            ],
             "request": "launch",
-            "program": "./src/aiotaskq/tests/test_app.py",
             "console": "integratedTerminal"
         },
         {

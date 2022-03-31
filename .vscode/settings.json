@@ -3,6 +3,9 @@
         "**/.git": true,
         "**/.venv": true,
         "**/.hg": true,
-        "**/.DS_Store": true
+        "**/.DS_Store": true,
+        "**/*.egg-info": true,
+        "**/__pycache__": true,
+        "**/.mypy_cache": true
     }
 }
