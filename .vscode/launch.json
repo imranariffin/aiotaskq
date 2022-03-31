@@ -12,21 +12,37 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Test",
+            "name": "Sample App",
             "type": "python",
             "request": "launch",
-            "program": "./src/aiotaskq/tests/integration_test.py",
+            "module": "aiotaskq.tests.apps.simple_app",
+            "args": [],
             "console": "integratedTerminal"
         },
         {
-            "name": "Worker",
+            "name": "Test",
+            "type": "python",
+            "module": "coverage",
+            "args": [
+                "run",
+                "-m",
+                "pytest",
+                "-vvv",
+                "-s",
+            ],
+            "request": "launch",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Sample Worker (Simple App)",
             "type": "python",
             "request": "launch",
-            "program": "./src/aiotaskq/worker.py",
-            "console": "integratedTerminal",
+            "module": "aiotaskq",
             "args": [
-                "aiotaskq.main"
-            ]
+                "worker",
+                "aiotaskq.tests.apps.simple_app"
+            ],
+            "console": "integratedTerminal",
         }
     ]
 }

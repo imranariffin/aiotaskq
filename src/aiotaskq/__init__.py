@@ -7,7 +7,7 @@ Usage::
     import aiotaskq
 
 
-    @aiotaskq.register_task
+    @aiotaskq.task
     def some_task(b: int) -> int:
         # Some task with high cpu usage
         def _naive_fib(n: int) -> int:
@@ -29,7 +29,7 @@ Usage::
 
 """
 
-from .main import register_task
+from .main import task
 
 
-__all__ = ["register_task"]
+__all__ = ["task"]
