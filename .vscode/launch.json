@@ -27,11 +27,12 @@
             "name": "Worker",
             "type": "python",
             "request": "launch",
-            "program": "./src/aiotaskq/worker.py",
-            "console": "integratedTerminal",
+            "module": "aiotaskq",
             "args": [
-                "aiotaskq.main"
-            ]
+                "worker",
+                "aiotaskq.tests.test_app"
+            ],
+            "console": "integratedTerminal",
         }
     ]
 }

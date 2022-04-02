@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 
 import asyncio
+import typing as t
 
 import typer
 
-from aiotaskq.worker import worker
+from aiotaskq.worker import Defaults, worker
 
 cli = typer.Typer()
 
 
 @cli.command(name="worker")
-def _worker_command(app: str):
+def _worker_command(app: str, concurrency: t.Optional[int] = None):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(worker(app_import_path=app))
+    loop.run_until_complete(worker(app_import_path=app, concurrency=concurrency))
 
 
 @cli.command(name="metric")

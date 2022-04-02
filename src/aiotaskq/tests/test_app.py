@@ -45,6 +45,7 @@ class TestApp(unittest.TestCase):
         """
         Assert that async version of the task returns the same output as the sync version.
         """
+
         async def main():
             sync_result = add(x=41, y=1)
             async_result = await add.apply_async(x=41, y=1)
