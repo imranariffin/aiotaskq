@@ -36,7 +36,7 @@ def _worker(
     poll_interval_s: t.Optional[float] = Defaults.poll_interval_s,
 ):
     pid = os.getpid()
-    channel = f"{TASKS_CHANNEL}:{pid}"
+    channel = _get_child_worker_tasks_channel(pid=pid)
     app: types.ModuleType = importlib.import_module(app_import_path)
     logger.info("Child worker process [pid=%s]", pid)
 
@@ -112,14 +112,28 @@ async def worker(
     ]
     for p in child_worker_processes:
         p.start()
+    child_worker_pids = [c.pid for c in child_worker_processes]
 
     # Main worker accepts new task and pass it on to one of child workers
-    # child_worker_processes = psutil.Process().children()
     logger.debug(
         "[%s] Forked %s child worker processes: [pids=%s]",
-        *(pid, len(child_worker_processes), [c.pid for c in child_worker_processes]),
+        *(pid, len(child_worker_processes), child_worker_pids),
     )
+
     try:
+        # DEBUG START
+        import signal
+
+        def cleanup(signum: int, frame) -> None:
+            for p in child_worker_processes:
+                p.terminate()
+                p.join()
+            raise SystemExit(signum)
+
+        signal.signal(signal.SIGTERM, cleanup)
+        signal.signal(signal.SIGINT, cleanup)
+        # DEBUG END
+
         redis_client = aioredis.from_url(REDIS_URL)
         async with redis_client.pubsub() as pubsub:
             await pubsub.subscribe(TASKS_CHANNEL)
@@ -136,11 +150,13 @@ async def worker(
                 # Pass the task to one of the workers worker
                 i = counter % len(child_worker_processes)
                 selected_child_worker = child_worker_processes[i]
-                channel = f"{TASKS_CHANNEL}:{selected_child_worker.pid}"
+                channel = _get_child_worker_tasks_channel(pid=selected_child_worker.pid)
                 logger.debug(
                     "[%s] Passing task to %sth child worker [message=%s, channel=%s]",
                     *(pid, i, message, channel),
                 )
+                # Wait for all child workers to be ready before publishing
+                await _wait_for_child_workers_ready(publisher=redis_client, child_worker_pids=child_worker_pids)
                 await redis_client.publish(channel, message=message["data"])
                 counter += 1
     except Exception as e:
@@ -148,4 +164,22 @@ async def worker(
     finally:
         logger.info("Cleaning up")
         # Clean up
-        p.join()
+        for p in child_worker_processes:
+            p.terminate()
+            p.join()
+
+
+async def _wait_for_child_workers_ready(publisher, child_worker_pids: list[int]) -> None:
+    while True:
+        # Check if all child workers to be ready
+        child_workers_ready_statuses = [
+            (await publisher.pubsub_numsub(_get_child_worker_tasks_channel(pid=pid)))[0][1] > 0
+            for pid in child_worker_pids
+        ]
+        if all(child_workers_ready_statuses):
+            break
+        await asyncio.sleep(0.1)
+
+
+def _get_child_worker_tasks_channel(pid: int) -> str:
+    return f"{TASKS_CHANNEL}:{pid}"
