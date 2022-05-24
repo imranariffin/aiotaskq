@@ -5,6 +5,7 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 [project]
+version = "0.0.2"
 dependencies = [
     "aioredis==2.0.1",
     "redis==4.1.4",

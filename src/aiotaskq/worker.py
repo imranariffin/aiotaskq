@@ -41,6 +41,24 @@ def _worker(
     logger.info("Child worker process [pid=%s]", pid)
 
     async def main_loop():
+        # DEBUG START
+        import signal
+
+        def cleanup(signum: int, frame) -> None:
+            logger.error("[pid=%s] Killed by parent with signum=%s", pid, signum)
+            raise SystemExit(signum)
+
+        signal.signal(signal.SIGTERM, cleanup)
+        signal.signal(signal.SIGINT, cleanup)
+        # DEBUG END
+
+        try:
+            await _main_loop()
+        except asyncio.CancelledError as e:
+            raise e
+
+
+    async def _main_loop():
         logger.info("[%s] Main loop", pid)
         redis_client = aioredis.from_url(REDIS_URL)
         async with redis_client.pubsub() as pubsub:
@@ -91,15 +109,15 @@ async def worker(
 ):
     """Main loop for worker to poll for next task and execute them."""
     concurrency = concurrency if concurrency is not None else Defaults.concurrency
+    pid = os.getpid()
     logger.info(
-        "aiotaskq worker \n"
+        "[pid=%s] aiotaskq worker \n"
         "\tversion: %s\n"
         "\tpoll interval (seconds): %s\n"
         "\tredis url: %s\n"
         "\tconcurrency: %s\n",
-        *("1.0.0", poll_interval_s, REDIS_URL, concurrency),
+        *(pid, "1.0.0", poll_interval_s, REDIS_URL, concurrency),
     )
-    pid = os.getpid()
 
     # Ensure child worker processes log parent's stderr
     multiprocessing.log_to_stderr(logging.INFO)
@@ -115,7 +133,7 @@ async def worker(
     child_worker_pids = [c.pid for c in child_worker_processes]
 
     # Main worker accepts new task and pass it on to one of child workers
-    logger.debug(
+    logger.info(
         "[%s] Forked %s child worker processes: [pids=%s]",
         *(pid, len(child_worker_processes), child_worker_pids),
     )
@@ -125,6 +143,7 @@ async def worker(
         import signal
 
         def cleanup(signum: int, frame) -> None:
+            print("[Main Process] Cleaning up")
             for p in child_worker_processes:
                 p.terminate()
                 p.join()
@@ -161,10 +180,15 @@ async def worker(
                 counter += 1
     except Exception as e:
         logger.error("Some error: %s", e)
+    except asyncio.CancelledError as e:
+        logger.error("Task cancelled error: %s", e)
+        print("Task cancelled error: ", e)
     finally:
         logger.info("Cleaning up")
+        print("Cleaning up")
         # Clean up
         for p in child_worker_processes:
+            logger.debug("Terminating child process %s", p.pid)
             p.terminate()
             p.join()
 

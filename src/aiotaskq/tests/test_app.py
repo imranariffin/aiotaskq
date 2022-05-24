@@ -1,5 +1,7 @@
 import asyncio
 from asyncio import get_event_loop
+import subprocess
+import time
 import unittest
 
 import aiotaskq
@@ -37,10 +39,18 @@ def some_task(b: int) -> int:
 class TestApp(unittest.TestCase):
     def setUp(self) -> None:
         self.loop = get_event_loop()
-        self.worker_task = self.loop.create_task(worker("aiotaskq.tests.test_app"))
+        # self.worker_task = self.loop.create_task(worker("aiotaskq.tests.test_app"))
+        # bashCommand = ["aiotaskq", "worker", "aiotaskq.tests.test_app"]
+        # with subprocess.Popen(bashCommand) as worker_cli_process:
+        #     # Once we've given enough time for child worker processes to be spawned
+        #     time.sleep(1)
+        #     self.worker_cli_process = worker_cli_process
+
 
     def tearDown(self) -> None:
-        self.worker_task.cancel()
+        print("\n\n\nTerminating worker cli process\n\n")
+        # self.worker_task.cancel()
+        # self.worker_cli_process.terminate()
 
     def test_parity_with_sync(self):
         """
@@ -48,17 +58,24 @@ class TestApp(unittest.TestCase):
         """
 
         async def main():
-            sync_result = add(x=41, y=1)
-            async_result = await add.apply_async(x=41, y=1)
-            assert async_result == sync_result, f"{async_result} != {sync_result}"
-            sync_result = power(2, b=64)
-            async_result = await power.apply_async(2, b=64)
-            assert async_result == sync_result, f"{async_result} != {sync_result}"
-            sync_result = join([2021, 2, 20])
-            async_result = await join.apply_async([2021, 2, 20])
-            assert async_result == sync_result, f"{async_result} != {sync_result}"
-            sync_result = some_task(21)
-            async_result = await some_task.apply_async(21)
-            assert async_result == sync_result, f"{async_result} != {sync_result}"
+            bashCommand = ["aiotaskq", "worker", "aiotaskq.tests.test_app"]
+            print("Strarting worker cli process")
+            with subprocess.Popen(bashCommand) as worker_cli_process:
+                # Once we've given enough time for child worker processes to be spawned
+                time.sleep(1)
+                print("Running working cli process in background")
+                sync_result = add(x=41, y=1)
+                async_result = await add.apply_async(x=41, y=1)
+                assert async_result == sync_result, f"{async_result} != {sync_result}"
+                sync_result = power(2, b=64)
+                async_result = await power.apply_async(2, b=64)
+                assert async_result == sync_result, f"{async_result} != {sync_result}"
+                sync_result = join([2021, 2, 20])
+                async_result = await join.apply_async([2021, 2, 20])
+                assert async_result == sync_result, f"{async_result} != {sync_result}"
+                sync_result = some_task(21)
+                async_result = await some_task.apply_async(21)
+                assert async_result == sync_result, f"{async_result} != {sync_result}"
+                worker_cli_process.terminate()
 
         self.loop.run_until_complete(main())
