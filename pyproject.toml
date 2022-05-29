@@ -8,9 +8,11 @@ build-backend = "setuptools.build_meta"
 dependencies = [
     "aioredis==2.0.1",
     "redis==4.1.4",
-    "typer==0.4.0"
+    "typer==0.4.0",
+    "click==8.0.4"
 ]
 name = "aiotaskq"
+version = "0.0.4"
 [project.optional-dependencies]
 tests = [
     "mypy==0.931",
