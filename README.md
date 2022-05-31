@@ -167,8 +167,30 @@ if __name__ == "__main__":
 ```
 
 ## Install
+
 ```bash
 pip install aiotaskq
+```
+
+or
+
+```bash
+source ./activate.sh
+```
+
+## Tests
+
+In other terminal
+
+```bash
+./docker.sh
+```
+
+In main terminal
+
+```bash
+source ./activate.sh
+./test.sh
 ```
 
 ## Links
