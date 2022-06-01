@@ -172,7 +172,7 @@ if __name__ == "__main__":
 pip install aiotaskq
 ```
 
-or
+## Development
 
 ```bash
 source ./activate.sh
