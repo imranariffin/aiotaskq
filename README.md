@@ -6,7 +6,7 @@ A simple asynchronous task queue
 
 ## Motivation
 
-Popular asynchronous worker library like Celery doesn't support asyncio and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
+Popular asynchronous worker library like [Celery](https://github.com/celery/celery) doesn't support asyncio and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
 
 Plus, it is also fully-typed for better productivity and correctness.
 

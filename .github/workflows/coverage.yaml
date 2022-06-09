@@ -22,5 +22,3 @@ jobs:
     - run: pip freeze
     - run: ./test.sh
     - uses: codecov/codecov-action@v3.1.0
-      with:
-        token: e1038ca3-70ae-433d-be18-5764f119c744
