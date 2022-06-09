@@ -1,10 +1,10 @@
-# aiotask
+# aiotaskq
 
 A simple asynchronous task queue
 
 ## Motivation
 
-Famous existing asynchronous worker library (Celery) doesn't support asyncio and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
+Popular asynchronous worker library like Celery doesn't support asyncio and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
 
 Plus, it is also fully-typed for better productivity and correctness.
 
@@ -12,11 +12,7 @@ Give it a try and let us know if you like it. For questions or feedback feel to 
 
 ## Example Usage
 Install aiotaskq
-```bash
-python -m pip install --upgrade pip
-pip install aiotaskq
-```
-Define simple app like the following:
+Define a simple app like the following:
 ```bash
 tree .
 .
@@ -186,7 +182,7 @@ In other terminal
 ./docker.sh
 ```
 
-In main terminal
+In the main terminal
 
 ```bash
 source ./activate.sh
