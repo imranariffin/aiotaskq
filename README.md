@@ -12,6 +12,10 @@ Give it a try and let us know if you like it. For questions or feedback feel to 
 
 ## Example Usage
 Install aiotaskq
+```bash
+python -m pip install --upgrade pip
+pip install aiotaskq
+```
 Define a simple app like the following:
 ```bash
 tree .
@@ -176,7 +180,7 @@ source ./activate.sh
 
 ## Tests
 
-In other terminal
+In another terminal
 
 ```bash
 ./docker.sh
