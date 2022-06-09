@@ -1,5 +1,7 @@
 # aiotaskq
 
+[![codecov](https://codecov.io/gh/cglotr/aiotaskq/branch/main/graph/badge.svg?token=9I3i2Pwtif)](https://codecov.io/gh/cglotr/aiotaskq)
+
 A simple asynchronous task queue
 
 ## Motivation

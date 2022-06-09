@@ -12,6 +12,7 @@ source .venv/bin/activate
 
 pip install --upgrade pip --quiet
 pip install -e . --quiet
+pip install -r ./requirements.txt
 
 python --version
 pip --version
