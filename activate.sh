@@ -15,5 +15,3 @@ pip install -e . --quiet
 
 python --version
 pip --version
-
-exit 0
