@@ -1,6 +1,6 @@
 # aiotaskq
 
-[![codecov](https://codecov.io/gh/cglotr/aiotaskq/branch/main/graph/badge.svg?token=9I3i2Pwtif)](https://codecov.io/gh/cglotr/aiotaskq)
+[![codecov](https://codecov.io/gh/imranariffin/aiotaskq/branch/main/graph/badge.svg?token=DNS55KOEI7)](https://codecov.io/gh/imranariffin/aiotaskq)
 [![build](https://github.com/cglotr/aiotaskq/actions/workflows/build.yaml/badge.svg)](https://github.com/cglotr/aiotaskq/actions/workflows/build.yaml)
 
 A simple asynchronous task queue
