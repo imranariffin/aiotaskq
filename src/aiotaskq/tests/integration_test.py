@@ -32,8 +32,7 @@ def some_task(b: int) -> int:
     return _naive_fib(b)
 
 
-if __name__ == "__main__":
-
+def test():
     async def main():
         sync_result = add(x=41, y=1)
         async_result = await add.apply_async(x=41, y=1)
@@ -49,6 +48,6 @@ if __name__ == "__main__":
         assert async_result == sync_result, f"{async_result} != {sync_result}"
 
     loop = get_event_loop()
-    t = loop.create_task(worker("aiotaskq.tests.test_app"))
+    t = loop.create_task(worker("aiotaskq.tests.integration_test"))
     loop.run_until_complete(main())
     t.cancel()

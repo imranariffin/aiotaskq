@@ -1,10 +1,13 @@
 # aiotaskq
 
+[![codecov](https://codecov.io/gh/imranariffin/aiotaskq/branch/main/graph/badge.svg)](https://codecov.io/gh/imranariffin/aiotaskq)
+[![build](https://github.com/imranariffin/aiotaskq/actions/workflows/build.yaml/badge.svg)](https://github.com/imranariffin/aiotaskq/actions/workflows/build.yaml)
+
 A simple asynchronous task queue
 
 ## Motivation
 
-Popular asynchronous worker library like Celery doesn't support asyncio and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
+Popular asynchronous worker library like [Celery](https://github.com/celery/celery) doesn't support asyncio and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
 
 Plus, it is also fully-typed for better productivity and correctness.
 

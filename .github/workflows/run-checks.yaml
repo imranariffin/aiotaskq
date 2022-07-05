@@ -29,4 +29,4 @@ jobs:
         pip install --upgrade pip
         pip install -e .
         pip freeze
-        python ./src/aiotaskq/tests/test_app.py
+        python ./src/aiotaskq/tests/integration_test.py

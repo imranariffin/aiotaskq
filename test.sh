@@ -1,1 +1,3 @@
-python ./src/aiotaskq/tests/test_app.py
+pip install pytest
+pip install coverage
+coverage run -m pytest

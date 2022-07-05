@@ -1,0 +1,23 @@
+name: build
+on:
+  pull_request:
+    branches:
+    - main
+  push:
+    branches:
+    - main
+jobs:
+  run_unit_tests:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - run: docker-compose -f ./docker-compose.yml up --detach redis
+    - uses: actions/setup-python@v3
+      with:
+        python-version: "3.10.x"
+    - run: source ./activate.sh
+    - run: pip install --upgrade pip
+    - run: pip install -e .
+    - run: pip freeze
+    - run: ./test.sh
