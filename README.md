@@ -1,7 +1,7 @@
 # aiotaskq
 
 [![codecov](https://codecov.io/gh/imranariffin/aiotaskq/branch/main/graph/badge.svg)](https://codecov.io/gh/imranariffin/aiotaskq)
-[![build](https://github.com/imranariffin/aiotaskq/actions/workflows/build.yaml/badge.svg)](https://github.com/cglotr/aiotaskq/actions/workflows/build.yaml)
+[![build](https://github.com/imranariffin/aiotaskq/actions/workflows/build.yaml/badge.svg)](https://github.com/imranariffin/aiotaskq/actions/workflows/build.yaml)
 
 A simple asynchronous task queue
 
