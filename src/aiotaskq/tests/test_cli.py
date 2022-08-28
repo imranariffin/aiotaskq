@@ -20,8 +20,8 @@ def test_root_show_proper_help_message():
             "  --help                          Show this message and exit.\n"
             "\n"
             "Commands:\n"
-            "  metric\n"
-            "  worker\n"
+            "  metric  Command to start server to collect and report tasks metrics...\n"
+            "  worker  Command to start workers.\n"
         )
         assert output == output_expected
 
@@ -33,11 +33,13 @@ def test_worker_show_proper_help_message():
         output_expected = (
             "Usage: aiotaskq worker [OPTIONS] APP\n"
             "\n"
+            "  Command to start workers.\n"
+            "\n"
             "Arguments:\n"
             "  APP  [required]\n"
             "\n"
             "Options:\n"
-            "  --concurrency INTEGER\n"
+            "  --concurrency INTEGER  [default: 8]\n"
             "  --help                 Show this message and exit.\n"
         )
         assert output == output_expected

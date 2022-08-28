@@ -1,3 +1,5 @@
+"""Module to define the main logic for the worker."""
+
 import asyncio
 import importlib
 import json
@@ -35,7 +37,7 @@ class Defaults:
 
 async def worker(
     app_import_path: str,
-    concurrency: t.Optional[int] = None,
+    concurrency: int,
     poll_interval_s: t.Optional[float] = Defaults.poll_interval_s,
 ):
     """Main loop for worker to poll for next task and execute them."""
@@ -45,7 +47,6 @@ async def worker(
         print(err_msg)
         sys.exit(1)
 
-    concurrency: int = concurrency if concurrency is not None else Defaults.concurrency
     pid: int = os.getpid()
     logger.info(
         "[pid=%s] aiotaskq worker \n"
@@ -64,8 +65,8 @@ async def worker(
         multiprocessing.Process(target=_worker, args=(app_import_path, poll_interval_s))
         for _ in range(concurrency)
     ]
-    for p in child_worker_processes:
-        p.start()
+    for proc in child_worker_processes:
+        proc.start()
     child_worker_pids = [c.pid for c in child_worker_processes]
 
     # Main worker accepts new task and pass it on to one of child workers
@@ -86,18 +87,12 @@ async def worker(
 
             # A new task is now available
             # Pass the task to one of the workers worker
-            i = counter % len(child_worker_processes)
-            selected_child_worker = child_worker_processes[i]
+            counter = (counter + 1) % len(child_worker_processes)
+            selected_child_worker = child_worker_processes[counter]
             channel: str = _get_child_worker_tasks_channel(pid=selected_child_worker.pid)
             logger.debug(
                 "[%s] Passing task to %sth child worker [message=%s, channel=%s]",
-                *(pid, i, message, channel),
-            )
-            # Wait for all child workers to be ready before publishing
-            await _wait_for_child_workers_ready(
-                publisher=redis_client,
-                child_worker_pids=child_worker_pids,
-                poll_interval_s=poll_interval_s,
+                *(pid, counter, message, channel),
             )
             await redis_client.publish(channel, message=message["data"])
             counter += 1
