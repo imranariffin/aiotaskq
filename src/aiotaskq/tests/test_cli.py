@@ -39,7 +39,7 @@ def test_worker_show_proper_help_message():
             "  APP  [required]\n"
             "\n"
             "Options:\n"
-            "  --concurrency INTEGER  [default: 8]\n"
+            f"  --concurrency INTEGER  [default: {multiprocessing.cpu_count()}]\n"
             "  --help                 Show this message and exit.\n"
         )
         assert output == output_expected
