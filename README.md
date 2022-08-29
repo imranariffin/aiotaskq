@@ -33,7 +33,7 @@ import asyncio
 import aiotaskq
 
 
-@aiotaskq.register_task
+@aiotaskq.task
 def some_task(b: int) -> int:
     # Some task with high cpu usage
     def _naive_fib(n: int) -> int:
@@ -130,25 +130,25 @@ Using `aiotaskq` we may end up with the following:
 ```python
 import asyncio
 
-from aiotaskq import register_task
+from aiotaskq import task
 
 
-@register_task
+@task
 def task_1(*args, **kwargs):
         pass
 
 
-@register_task
+@task
 def task_2(*args, **kwargs):
         pass
 
 
-@register_task
+@task
 def task_3(*args, **kwargs):
         pass
 
 
-@register_task
+@task
 def task_4(*args, **kwargs):
         pass
 

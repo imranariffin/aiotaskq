@@ -1,22 +1,27 @@
+"""Module to define the main commands for the cli."""
+
 #!/usr/bin/env python
 
 import asyncio
+import typing as t
 
 import typer
 
-from aiotaskq.worker import worker
+from aiotaskq.worker import Defaults, worker
 
 cli = typer.Typer()
 
 
 @cli.command(name="worker")
-def _worker_command(app: str):
+def worker_command(app: str, concurrency: t.Optional[int] = Defaults.concurrency):
+    """Command to start workers."""
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(worker(app_import_path=app))
+    loop.run_until_complete(worker(app_import_path=app, concurrency=concurrency))
 
 
 @cli.command(name="metric")
-def _metric_server(app: str):
+def metric_server(app: str):
+    """Command to start server to collect and report tasks metrics (TODO)."""
     print(f"TODO: Running metrics server for app={app}")
 
 
