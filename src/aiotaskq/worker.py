@@ -95,7 +95,6 @@ async def worker(
                 *(pid, counter, message, channel),
             )
             await redis_client.publish(channel, message=message["data"])
-            counter += 1
 
 
 def _worker(
