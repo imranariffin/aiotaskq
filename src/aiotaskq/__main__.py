@@ -15,8 +15,8 @@ cli = typer.Typer()
 @cli.command(name="worker")
 def worker_command(app: str, concurrency: t.Optional[int] = Defaults.concurrency):
     """Command to start workers."""
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(worker(app_import_path=app, concurrency=concurrency))
+    # loop = asyncio.get_event_loop()
+    asyncio.run(worker(app_import_path=app, concurrency=concurrency))
 
 
 @cli.command(name="metric")
