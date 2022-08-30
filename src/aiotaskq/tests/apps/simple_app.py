@@ -20,8 +20,6 @@ def join(ls: list, delimiter: str = ",") -> str:
 def some_task(b: int) -> int:
     # Some task with high cpu usage
     def _naive_fib(n: int) -> int:
-        if n <= 0:
-            return 0
         if n <= 2:
             return 1
         return _naive_fib(n - 1) + _naive_fib(n - 2)

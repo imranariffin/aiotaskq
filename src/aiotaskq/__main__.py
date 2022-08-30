@@ -2,21 +2,30 @@
 
 #!/usr/bin/env python
 
-import asyncio
 import typing as t
 
 import typer
 
-from aiotaskq.worker import Defaults, worker
+from .interfaces import ConcurrencyType
+from .worker import Defaults, run_worker_forever
 
 cli = typer.Typer()
 
 
 @cli.command(name="worker")
-def worker_command(app: str, concurrency: t.Optional[int] = Defaults.concurrency):
+def worker_command(
+    app: str,
+    concurrency: t.Optional[int] = Defaults.concurrency,
+    poll_interval_s: t.Optional[float] = Defaults.poll_interval_s,
+    concurrency_type: t.Optional[ConcurrencyType] = Defaults.concurrency_type,
+):
     """Command to start workers."""
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(worker(app_import_path=app, concurrency=concurrency))
+    run_worker_forever(
+        app_import_path=app,
+        concurrency=concurrency,
+        concurrency_type=concurrency_type,
+        poll_interval_s=poll_interval_s,
+    )
 
 
 @cli.command(name="metric")

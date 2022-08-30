@@ -1,22 +1,63 @@
 """Module to define the main logic for the worker."""
 
+from abc import ABC, abstractmethod
 import asyncio
+from functools import cached_property
 import importlib
 import json
 import logging
 import multiprocessing
 import os
+import signal
 import sys
-import types
 import typing as t
+import types
 
-import aioredis
-
-from aiotaskq.constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
-
+from .concurrency_manager import ConcurrencyManager
+from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
+from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
+from .pubsub import PubSub
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+class BaseWorker(ABC):
+    app: types.ModuleType
+    pubsub: IPubSub
+    concurrency_manager: IConcurrencyManager
+
+    def __init__(self, app_import_path: str):
+        self.app = importlib.import_module(app_import_path)
+
+    def run_forever(self) -> None:
+        """Run the worker forever in a loop, after running some preparation logic (in _pre_run)."""
+
+        async def _start():
+            await self._pre_run()
+            await self._main_loop()
+
+        asyncio.run(_start())
+
+    @abstractmethod
+    async def _pre_run(self):
+        """Define any logic to run before running the _main_loop."""
+
+    @abstractmethod
+    async def _main_loop(self):
+        """Define the logic for the main loop."""
+
+    @cached_property
+    def _logger(self):
+        return logging.getLogger(f"[{self._pid}] [{self.__class__.__qualname__}]")
+
+    @cached_property
+    def _pid(self) -> int:
+        return os.getpid()
+
+    @staticmethod
+    def _get_child_worker_tasks_channel(pid: int) -> str:
+        return f"{TASKS_CHANNEL}:{pid}"
 
 
 class Defaults:
@@ -24,157 +65,141 @@ class Defaults:
 
     @classmethod
     @property
-    def poll_interval_s(cls) -> float:
-        """Return the time in seconds to poll for next task."""
-        return 0.1
-
-    @classmethod
-    @property
     def concurrency(cls) -> int:
         """Return the number of worker process to spawn."""
         return multiprocessing.cpu_count()
 
+    @classmethod
+    @property
+    def concurrency_type(cls) -> str:
+        return ConcurrencyType.MULTIPROCESSING.value
 
-async def worker(
-    app_import_path: str,
-    concurrency: int,
-    poll_interval_s: t.Optional[float] = Defaults.poll_interval_s,
-):
-    """Main loop for worker to poll for next task and execute them."""
-
-    err_msg: str = _validate_input(app_import_path=app_import_path)
-    if err_msg:
-        print(err_msg)
-        sys.exit(1)
-
-    pid: int = os.getpid()
-    logger.info(
-        "[pid=%s] aiotaskq worker \n"
-        "\tversion: %s\n"
-        "\tpoll interval (seconds): %s\n"
-        "\tredis url: %s\n"
-        "\tconcurrency: %s\n",
-        *(pid, "1.0.0", poll_interval_s, REDIS_URL, concurrency),
-    )
-
-    # Ensure child worker processes log to parent's stderr
-    multiprocessing.log_to_stderr(logging.DEBUG)
-
-    # Start child worker processes in background
-    child_worker_processes: list["multiprocessing.Process"] = [
-        multiprocessing.Process(target=_worker, args=(app_import_path, poll_interval_s))
-        for _ in range(concurrency)
-    ]
-    for proc in child_worker_processes:
-        proc.start()
-    child_worker_pids = [c.pid for c in child_worker_processes]
-
-    # Main worker accepts new task and pass it on to one of child workers
-    logger.info(
-        "[%s] Forked %s child worker processes: [pids=%s]",
-        *(pid, len(child_worker_processes), child_worker_pids),
-    )
-    redis_client: aioredis.Redis = aioredis.from_url(REDIS_URL)
-    async with redis_client.pubsub() as pubsub:
-        await pubsub.subscribe(TASKS_CHANNEL)
-        counter = 0
-        while True:
-            # Poll for a new task until it's available
-            message: t.Optional[str] = None
-            while message is None:
-                message = await pubsub.get_message(ignore_subscribe_messages=True)
-                await asyncio.sleep(poll_interval_s)
-
-            # A new task is now available
-            # Pass the task to one of the workers worker
-            counter = (counter + 1) % len(child_worker_processes)
-            selected_child_worker = child_worker_processes[counter]
-            channel: str = _get_child_worker_tasks_channel(pid=selected_child_worker.pid)
-            logger.debug(
-                "[%s] Passing task to %sth child worker [message=%s, channel=%s]",
-                *(pid, counter, message, channel),
-            )
-            await redis_client.publish(channel, message=message["data"])
+    @classmethod
+    @property
+    def poll_interval_s(cls) -> float:
+        """Return the time in seconds to poll for next task."""
+        return 0.01
 
 
-def _worker(
-    app_import_path: str,
-    poll_interval_s: t.Optional[float] = Defaults.poll_interval_s,
-):
-    pid: int = os.getpid()
-    channel: str = _get_child_worker_tasks_channel(pid=pid)
-    app: types.ModuleType = importlib.import_module(app_import_path)
-    logger.info("Child worker process [pid=%s]", pid)
+class WorkerManager(BaseWorker):
+    def __init__(
+        self,
+        app_import_path: str,
+        concurrency: int,
+        concurrency_type: ConcurrencyType,
+        poll_interval_s: float,
+    ) -> None:
+        self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        self.concurrency_manager: IConcurrencyManager = ConcurrencyManager.get(
+            concurrency_type=concurrency_type,
+            concurrency=concurrency,
+        )
+        self._poll_interval_s = poll_interval_s
+        super().__init__(app_import_path=app_import_path)
 
-    async def _main_loop():
-        logger.info("[%s] Main loop", pid)
-        redis_client: aioredis.Redis = aioredis.from_url(REDIS_URL)
-        async with redis_client.pubsub() as pubsub:
-            await pubsub.subscribe(channel)
+    async def _pre_run(self):
+        self._logger.info("Starting %s back workers", self.concurrency_manager.concurrency)
+        self._start_grunt_workers()
+        loop = asyncio.get_event_loop()
+        loop.add_signal_handler(signal.SIGTERM, self._sigterm_handler)
+        loop.add_signal_handler(signal.SIGINT, self._sigint_handler)
 
+    def _sigterm_handler(self):
+        # pylint: disable=no-member
+        self._logger.debug("Handling signal %s (%s)", signal.SIGTERM.value, signal.SIGTERM.name)
+        self._handle_murder_signals()
+
+    def _sigint_handler(self):
+        # pylint: disable=no-member
+        self._logger.debug("Handling signal %s (%s)", signal.SIGINT.value, signal.SIGINT.name)
+        self._handle_murder_signals()
+
+    def _handle_murder_signals(self):
+        """Terminate (send TERM) to child processes upon receiving murder signals (TERM, INT)."""
+        for task in asyncio.tasks.all_tasks():
+            task.cancel()
+        self.concurrency_manager.terminate()
+
+    async def _main_loop(self):
+        self._logger.info("Started main loop")
+
+        async with self.pubsub as pubsub:
+            counter = -1
+            grunt_worker_pids: list[int] = list(self.concurrency_manager.processes.keys())
+            await pubsub.subscribe(TASKS_CHANNEL)
             while True:
-                # Poll for a new task until it's available
-                logger.debug(
-                    "[%s] Waiting for new tasks from main worker [channel=%s]",
-                    *(pid, channel),
-                )
-                message = None
-                while message is None:
-                    message = await pubsub.get_message(ignore_subscribe_messages=True)
-                    await asyncio.sleep(poll_interval_s)
+                self._logger.debug("Polling for a new task until it's available")
+                message = await pubsub.poll()
 
                 # A new task is now available
-                logger.debug(
+                # Pass the task to one of the workers worker
+                counter = (counter + 1) % len(self.concurrency_manager.processes)
+                selected_grunt_worker_pid = grunt_worker_pids[counter]
+                channel: str = self._get_child_worker_tasks_channel(pid=selected_grunt_worker_pid)
+                self._logger.debug(
+                    "[%s] Passing task to %sth child worker [message=%s, channel=%s]",
+                    *(self._pid, counter, message, channel),
+                )
+                await pubsub.publish(channel=channel, message=message["data"])
+
+    def _start_grunt_workers(self):
+        def _run_grunt_worker_forever():
+            grunt_worker = GruntWorker(
+                app_import_path=self.app.__name__,
+                poll_interval_s=self._poll_interval_s,
+            )
+            grunt_worker.run_forever()
+
+        self.concurrency_manager.start(func=_run_grunt_worker_forever)
+
+
+class GruntWorker(BaseWorker):
+    def __init__(self, app_import_path: str, poll_interval_s: float):
+        self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        super().__init__(app_import_path=app_import_path)
+
+    async def _pre_run(self):
+        pass
+
+    async def _main_loop(self):
+        self._logger.debug("Started main loop")
+        channel: str = self._get_child_worker_tasks_channel(pid=self._pid)
+
+        async with self.pubsub as pubsub:
+            await pubsub.subscribe(channel=channel)
+            while True:
+                self._logger.debug(
+                    "[%s] Polling for a new task from manager until it's available [channel=%s]",
+                    *(self._pid, channel),
+                )
+                message = await pubsub.poll()
+
+                # A new task is now available
+                self._logger.debug(
                     "[%s] Received task to from main worker [message=%s, channel=%s]",
-                    *(pid, message, channel),
+                    *(self._pid, message, channel),
                 )
                 task_info = json.loads(message["data"])
                 task_args = task_info["args"]
                 task_kwargs = task_info["kwargs"]
                 task_id: str = task_info["task_id"]
                 task_func_name: str = task_id.split(":")[0].split(".")[-1]
-                task_func = getattr(app, task_func_name)
+                task_func = getattr(self.app, task_func_name)
 
                 # Execute the task
-                logger.debug(
+                self._logger.debug(
                     "[%s] Executing task %s(*%s, **%s)",
-                    *(pid, task_id, task_args, task_kwargs),
+                    *(self._pid, task_id, task_args, task_kwargs),
                 )
                 task_result = task_func(*task_args, **task_kwargs)
 
                 # Publish the task return value
                 task_result = json.dumps(task_result)
-                await redis_client.publish(
-                    RESULTS_CHANNEL_TEMPLATE.format(task_id=task_id),
-                    message=task_result,
-                )
-
-    asyncio.run(main=_main_loop())
+                result_channel = RESULTS_CHANNEL_TEMPLATE.format(task_id=task_id)
+                await pubsub.publish(channel=result_channel, message=task_result)
 
 
-async def _wait_for_child_workers_ready(
-    publisher: aioredis.Redis,
-    child_worker_pids: list[int],
-    poll_interval_s: int,
-) -> None:
-    while True:
-        # Keep check until all child workers are ready
-        ready_statuses_coro: list[t.Coroutine] = [
-            publisher.pubsub_numsub(_get_child_worker_tasks_channel(pid=pid))
-            for pid in child_worker_pids
-        ]
-        ready_statuses: list[list[tuple[bytes, int]]] = await asyncio.gather(*ready_statuses_coro)
-        if all(is_ready for (_, is_ready), *_ in ready_statuses):
-            break
-        # Continue waiting and checking
-        await asyncio.sleep(poll_interval_s)
-
-
-def _get_child_worker_tasks_channel(pid: int) -> str:
-    return f"{TASKS_CHANNEL}:{pid}"
-
-
-def _validate_input(app_import_path: str) -> t.Optional[str]:
+def validate_input(app_import_path: str) -> t.Optional[str]:
     try:
         importlib.import_module(app_import_path)
     except ModuleNotFoundError:
@@ -184,3 +209,26 @@ def _validate_input(app_import_path: str) -> t.Optional[str]:
         )
 
     return None
+
+
+def run_worker_forever(
+    app_import_path: str,
+    concurrency: int,
+    concurrency_type: ConcurrencyType,
+    poll_interval_s: float,
+) -> None:
+    err_msg: t.Optional[str] = validate_input(app_import_path=app_import_path)
+    if err_msg:
+        print(err_msg)
+        sys.exit(1)
+
+    try:
+        worker_manager = WorkerManager(
+            app_import_path=app_import_path,
+            concurrency=concurrency,
+            concurrency_type=concurrency_type,
+            poll_interval_s=poll_interval_s,
+        )
+        worker_manager.run_forever()
+    except asyncio.CancelledError:
+        pass
