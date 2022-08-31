@@ -222,5 +222,7 @@ def on_exit():
     tasks = list(asyncio.tasks.all_tasks())
     print(f"[{pid}] Cancelling these tasks: {tasks}")
     for task in tasks:
-        task.cancel()              
+        task.cancel()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
     # asyncio.ensure_future(exit_())
