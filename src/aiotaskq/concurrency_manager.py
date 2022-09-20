@@ -1,3 +1,5 @@
+"""Define IConcurrencyManager implementations."""
+
 from functools import cached_property
 import logging
 import multiprocessing
@@ -8,13 +10,18 @@ from .exceptions import ConcurrencyTypeNotSupported
 from .interfaces import ConcurrencyType, IConcurrencyManager, IProcess
 
 
-class ConcurrencyManager:
+class ConcurrencyManagerSingleton:
     """The user-facing facade for creating the right concurrency manager implementation."""
 
-    _instance: "IConcurrencyManager"
+    _instance: t.Optional["IConcurrencyManager"] = None
 
     @classmethod
     def get(cls, concurrency_type: str, concurrency) -> IConcurrencyManager:
+        """
+        Return the correct concurrency manager implementation instance based on url.
+
+        Currently supports only MultiProcessing.
+        """
         if cls._instance:
             return cls._instance
         if concurrency_type == ConcurrencyType.MULTIPROCESSING:
@@ -23,6 +30,11 @@ class ConcurrencyManager:
         raise ConcurrencyTypeNotSupported(
             f'Concurrency type "{concurrency_type}" is not yet supported.'
         )
+
+    @classmethod
+    def reset(cls) -> None:
+        """Reset the singleton."""
+        cls._instance = None
 
 
 class MultiProcessing:

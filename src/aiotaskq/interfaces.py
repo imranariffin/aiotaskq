@@ -71,6 +71,28 @@ class IConcurrencyManager(t.Protocol):
 
 
 class IPubSub(t.Protocol):
+    """
+    Define the interface of Publisher-Subscriber.
+
+    This is the typical usage of this interface:
+
+    ```
+    # Publisher code:
+    async with SomePubSub() as some_publisher:
+        message = "Hello World"
+        channel = "Some-Channel"
+        await some_publisher.publish(channel, message)
+        print(f"Sent message: {message}")
+
+    # Subscriber code:
+    async with SomePubSub() as some_subscriber:
+        channel = "Some-Channel"
+        await some_subscriber.subscribe(channel)
+        while True:
+            message = await some_subscriber.poll()
+            print(f"Got message: {message}")
+    ```
+    """
     def __init__(self, url: str, poll_interval_s: float, *args, **kwargs):
         """Initialize the pubsub class."""
 

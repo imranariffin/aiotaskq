@@ -13,16 +13,24 @@ import sys
 import typing as t
 import types
 
-from .concurrency_manager import ConcurrencyManager
+from .concurrency_manager import ConcurrencyManagerSingleton
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
-from .interfaces import ConcurrencyType, IConcurrencyManager, IProcess, IPubSub
-from .pubsub import PubSub
+from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
+from .pubsub import PubSubSingleton
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class BaseWorker(ABC):
+    """
+    Define the abstract worker.
+
+    Worker is meant to be run forever with some custom logic inside its forever loop.
+    The custom logic inside the forever loop can be written in `_main_loop` -- This is
+    where you write your `while True: some_logic`.
+    """
+
     app: types.ModuleType
     pubsub: IPubSub
     concurrency_manager: IConcurrencyManager
@@ -31,7 +39,11 @@ class BaseWorker(ABC):
         self.app = importlib.import_module(app_import_path)
 
     def run_forever(self) -> None:
-        """Run the worker forever in a loop, after running some preparation logic (in _pre_run)."""
+        """
+        Run the worker forever in a loop, after running some preparation logic (in _pre_run).
+
+        This is the entrypoint from sync world to async.
+        """
 
         async def _start():
             await self._pre_run()
@@ -72,6 +84,7 @@ class Defaults:
     @classmethod
     @property
     def concurrency_type(cls) -> str:
+        """Return the default concurrency type ("multiprocessing")."""
         return ConcurrencyType.MULTIPROCESSING.value
 
     @classmethod
@@ -82,6 +95,15 @@ class Defaults:
 
 
 class WorkerManager(BaseWorker):
+    """
+    Spawn and manage a list of GruntWorkers.
+
+    Each GruntWorker is spawned in its own process via IConcurrencyManager.
+    Any task that WorkerManager receives will be published to the GruntWorkers
+    via IPubSub. On its own death (TERM/INT signal), it's responsible for killing
+    all of its GruntWorker processes.
+    """
+
     def __init__(
         self,
         app_import_path: str,
@@ -89,8 +111,8 @@ class WorkerManager(BaseWorker):
         concurrency_type: ConcurrencyType,
         poll_interval_s: float,
     ) -> None:
-        self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
-        self.concurrency_manager: IConcurrencyManager = ConcurrencyManager.get(
+        self.pubsub: IPubSub = PubSubSingleton.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        self.concurrency_manager: IConcurrencyManager = ConcurrencyManagerSingleton.get(
             concurrency_type=concurrency_type,
             concurrency=concurrency,
         )
@@ -123,7 +145,7 @@ class WorkerManager(BaseWorker):
     async def _main_loop(self):
         self._logger.info("Started main loop")
 
-        async with self.pubsub as pubsub:
+        async with self.pubsub as pubsub:  # pylint: disable=not-async-context-manager
             counter = -1
             await pubsub.subscribe(TASKS_CHANNEL)
             while True:
@@ -153,8 +175,15 @@ class WorkerManager(BaseWorker):
 
 
 class GruntWorker(BaseWorker):
+    """
+    Execute tasks received from WorkerManager.
+
+    Task is received from WorkerManager via IPubSub. The result of a finished task
+    will be published to the user via IPubSub.
+    """
+
     def __init__(self, app_import_path: str, poll_interval_s: float):
-        self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        self.pubsub: IPubSub = PubSubSingleton.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
         super().__init__(app_import_path=app_import_path)
 
     async def _pre_run(self):
@@ -164,7 +193,7 @@ class GruntWorker(BaseWorker):
         self._logger.debug("Started main loop")
         channel: str = self._get_child_worker_tasks_channel(pid=self._pid)
 
-        async with self.pubsub as pubsub:
+        async with self.pubsub as pubsub:  # pylint: disable=not-async-context-manager
             await pubsub.subscribe(channel=channel)
             while True:
                 self._logger.debug(
@@ -199,6 +228,7 @@ class GruntWorker(BaseWorker):
 
 
 def validate_input(app_import_path: str) -> t.Optional[str]:
+    """Validate all worker cli inputs and return an error string if any."""
     try:
         importlib.import_module(app_import_path)
     except ModuleNotFoundError:
@@ -216,6 +246,7 @@ def run_worker_forever(
     concurrency_type: ConcurrencyType,
     poll_interval_s: float,
 ) -> None:
+    """Run the worker manager in a forever loop, and let it spawn and manage the workers."""
     err_msg: t.Optional[str] = validate_input(app_import_path=app_import_path)
     if err_msg:
         print(err_msg)
