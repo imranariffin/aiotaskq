@@ -41,6 +41,6 @@ class WorkerFixture:
 
 @pytest.fixture
 def worker():
-    worker = WorkerFixture()
-    yield worker
-    worker.terminate()
+    worker_ = WorkerFixture()
+    yield worker_
+    worker_.terminate()

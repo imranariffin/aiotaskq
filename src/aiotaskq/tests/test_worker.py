@@ -1,4 +1,3 @@
-from asyncore import poll
 import multiprocessing
 import os
 import signal
@@ -8,7 +7,7 @@ from typing import TYPE_CHECKING
 import pytest
 from aiotaskq.interfaces import ConcurrencyType
 
-from aiotaskq.worker import run_worker_forever, validate_input
+from aiotaskq.worker import validate_input
 
 if TYPE_CHECKING:  # pragma: no cover
     from aiotaskq.tests.conftest import WorkerFixture

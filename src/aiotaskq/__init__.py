@@ -27,7 +27,7 @@ Usage::
 
 """
 
-from .main import task
+from .task import task
 
 
 __all__ = ["task"]

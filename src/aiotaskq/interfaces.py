@@ -58,7 +58,7 @@ class IConcurrencyManager(t.Protocol):
     """
 
     concurrency: int
-    processes: dict[int, IProcess]
+    processes: list[IProcess]
 
     def __init__(self, concurrency: int) -> None:
         """Initialize the concurrency manager."""

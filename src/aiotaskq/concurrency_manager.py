@@ -30,19 +30,18 @@ class MultiProcessing:
 
     def __init__(self, concurrency: int) -> None:
         self.concurrency = concurrency
-        self.processes: dict[int, IProcess] = {}
+        self.processes: list[IProcess] = []
 
     def start(self, func: t.Callable, *args: t.ParamSpecArgs) -> None:
         """Start each processes under management."""
         for _ in range(self.concurrency):
             proc = multiprocessing.Process(target=func, args=args)
             proc.start()
-            assert proc.pid is not None
-            self.processes[proc.pid] = proc
+            self.processes.append(proc)
 
     def terminate(self) -> None:
         """Terminate each process under management."""
-        for proc in self.processes.values():
+        for proc in self.processes:
             self._logger.debug("Sending signal TERM to back worker process [pid=%s]", proc.pid)
             proc.terminate()
 

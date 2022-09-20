@@ -1,6 +1,6 @@
 import pytest
 
-from aiotaskq.main import Task
+from aiotaskq.task import Task
 from aiotaskq.tests.conftest import WorkerFixture
 from aiotaskq.tests.apps import simple_app
 

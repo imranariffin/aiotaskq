@@ -15,7 +15,7 @@ import types
 
 from .concurrency_manager import ConcurrencyManager
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
-from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
+from .interfaces import ConcurrencyType, IConcurrencyManager, IProcess, IPubSub
 from .pubsub import PubSub
 
 logging.basicConfig(level=logging.INFO)
@@ -125,7 +125,6 @@ class WorkerManager(BaseWorker):
 
         async with self.pubsub as pubsub:
             counter = -1
-            grunt_worker_pids: list[int] = list(self.concurrency_manager.processes.keys())
             await pubsub.subscribe(TASKS_CHANNEL)
             while True:
                 self._logger.debug("Polling for a new task until it's available")
@@ -134,7 +133,7 @@ class WorkerManager(BaseWorker):
                 # A new task is now available
                 # Pass the task to one of the workers worker
                 counter = (counter + 1) % len(self.concurrency_manager.processes)
-                selected_grunt_worker_pid = grunt_worker_pids[counter]
+                selected_grunt_worker_pid = self.concurrency_manager.processes[counter].pid
                 channel: str = self._get_child_worker_tasks_channel(pid=selected_grunt_worker_pid)
                 self._logger.debug(
                     "[%s] Passing task to %sth child worker [message=%s, channel=%s]",
