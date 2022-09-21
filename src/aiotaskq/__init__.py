@@ -11,10 +11,8 @@ Usage::
     def some_task(b: int) -> int:
         # Some task with high cpu usage
         def _naive_fib(n: int) -> int:
-            if n <= 1:
+            if n <= 2:
                 return 1
-            elif n <= 2:
-                return 2
             return _naive_fib(n - 1) + _naive_fib(n - 2)
         return _naive_fib(b)
 
@@ -29,7 +27,7 @@ Usage::
 
 """
 
-from .main import task
+from .task import task
 
 
 __all__ = ["task"]

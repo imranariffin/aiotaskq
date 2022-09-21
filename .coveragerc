@@ -1,2 +1,6 @@
 [run]
 source = src/
+parallel = True
+concurrency = multiprocessing
+omit =
+    src/aiotaskq/__main__.py

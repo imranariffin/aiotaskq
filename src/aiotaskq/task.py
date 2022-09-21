@@ -1,6 +1,5 @@
 """Module to define the main logic of the library."""
 
-import asyncio
 import inspect
 import json
 import logging
@@ -8,10 +7,10 @@ from types import ModuleType
 import typing as t
 import uuid
 
-import aioredis
-
-from aiotaskq.constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
-from aiotaskq.exceptions import ModuleInvalidForTask
+from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
+from .exceptions import ModuleInvalidForTask
+from .interfaces import IPubSub, PollResponse
+from .pubsub import PubSub
 
 RT = t.TypeVar("RT")
 P = t.ParamSpec("P")
@@ -27,6 +26,7 @@ class AsyncResult(t.Generic[RT]):
     To get the result of corresponding task, use `.get()`.
     """
 
+    pubsub: IPubSub
     _result: RT
     _completed: bool = False
     _task_id: str
@@ -34,16 +34,14 @@ class AsyncResult(t.Generic[RT]):
     def __init__(self, task_id: str) -> None:
         """Store task_id in AsyncResult instance."""
         self._task_id = task_id
+        self.pubsub = PubSub.get(url=REDIS_URL, poll_interval_s=0.01)
 
     async def get(self) -> RT:
         """Return the result of the task once finished."""
-        redis_client = aioredis.from_url(REDIS_URL)
-        async with redis_client.pubsub() as pubsub:
-            message: t.Optional[dict] = None
-            while message is None:
-                await pubsub.subscribe(RESULTS_CHANNEL_TEMPLATE.format(task_id=self._task_id))
-                message = await pubsub.get_message(ignore_subscribe_messages=True)
-                await asyncio.sleep(0.1)
+        async with self.pubsub as pubsub:
+            message: PollResponse
+            await pubsub.subscribe(RESULTS_CHANNEL_TEMPLATE.format(task_id=self._task_id))
+            message = await self.pubsub.poll()
             logger.debug("Message: %s", message)
             _result: RT = json.loads(message["data"])
         return _result
@@ -113,14 +111,16 @@ class Task(t.Generic[P, RT]):
                 "kwargs": kwargs,
             }
         )
-        publisher: aioredis.Redis = _get_redis_client()
+        pubsub_ = PubSub.get(
+            url=REDIS_URL, poll_interval_s=0.01, max_connections=10, decode_responses=True
+        )
+        async with pubsub_ as pubsub:
+            logger.debug("Publishing task [task_id=%s, message=%s]", task_id, message)
+            await pubsub.publish(TASKS_CHANNEL, message=message)
 
-        logger.debug("Publishing task [task_id=%s, message=%s]", task_id, message)
-        await publisher.publish(TASKS_CHANNEL, message=message)
-
-        logger.debug("Retrieving result for task [task_id=%s]", task_id)
-        async_result: AsyncResult[RT] = AsyncResult(task_id=task_id)
-        result: RT = await async_result.get()
+            logger.debug("Retrieving result for task [task_id=%s]", task_id)
+            async_result: AsyncResult[RT] = AsyncResult(task_id=task_id)
+            result: RT = await async_result.get()
 
         return result
 
@@ -145,12 +145,3 @@ def task(func: t.Callable[P, RT]) -> Task[P, RT]:
     task_.__qualname__ = f"{module_path}.{func.__name__}"
     task_.__module__ = module_path
     return task_
-
-
-_REDIS_CLIENT: t.Optional[aioredis.Redis] = None
-
-
-def _get_redis_client() -> aioredis.Redis:
-    if _REDIS_CLIENT is not None:
-        return _REDIS_CLIENT
-    return aioredis.from_url(REDIS_URL, max_connections=10, decode_responses=True)
