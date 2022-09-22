@@ -1,3 +1,5 @@
+"""Define IPubSub implementations."""
+
 import asyncio
 import typing as t
 
@@ -7,7 +9,7 @@ from .exceptions import UrlNotSupported
 from .interfaces import IPubSub, Message, PollResponse
 
 
-class PubSub:
+class PubSubSingleton:
     """The user-facing facade for creating the right pubsub implementation based on url."""
 
     _instance: t.Optional[IPubSub] = None
@@ -15,7 +17,7 @@ class PubSub:
     @classmethod
     def get(cls, url: str, poll_interval_s: float, **kwargs) -> IPubSub:
         """
-        Return the correct pubsub instance based on url.
+        Return the correct pubsub implementation instance based on url.
 
         Currently supports only Redis (url="redis*").
         """
@@ -26,6 +28,11 @@ class PubSub:
             cls._instance = PubSubRedis(url=url, poll_interval_s=poll_interval_s, **kwargs)
             return cls._instance
         raise UrlNotSupported(f'Url "{url}" is currently not supported.')
+
+    @classmethod
+    def reset(cls):
+        """Reset the singleton."""
+        cls._instance = None
 
 
 class PubSubRedis:

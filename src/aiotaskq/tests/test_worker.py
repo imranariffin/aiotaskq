@@ -52,17 +52,17 @@ def test_incorrect_app():
     # Given that the worker is started with an incorrect app name
     incorrect_app_name = "some.incorrect.app.name"
     bash_command = ["aiotaskq", "worker", incorrect_app_name]
-    worker_cli_process = subprocess.Popen(args=bash_command, stdout=subprocess.PIPE)
-    with WrapClose(proc=worker_cli_process) as worker_cli_process_pipe:
-        # Then the worker process should print error message
-        output = str(worker_cli_process_pipe.read())
-        output_expected = (
-            "Error at argument `--app_import_path some.incorrect.app.name`: "
-            '"some.incorrect.app.name" is not a path to a valid Python module'
-        )
-        assert output_expected in output
-    # And exit immediately with an error exit code
-    assert worker_cli_process.returncode == 1
+    with subprocess.Popen(args=bash_command, stdout=subprocess.PIPE) as worker_cli_process:
+        with WrapClose(proc=worker_cli_process) as worker_cli_process_pipe:
+            # Then the worker process should print error message
+            output = str(worker_cli_process_pipe.read())
+            output_expected = (
+                "Error at argument `--app_import_path some.incorrect.app.name`: "
+                '"some.incorrect.app.name" is not a path to a valid Python module'
+            )
+            assert output_expected in output
+        # And exit immediately with an error exit code
+        assert worker_cli_process.returncode == 1
 
 
 def test_validate_input():

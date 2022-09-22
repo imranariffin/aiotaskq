@@ -1,5 +1,5 @@
 from aiotaskq.exceptions import ConcurrencyTypeNotSupported
-from aiotaskq.concurrency_manager import ConcurrencyManager
+from aiotaskq.concurrency_manager import ConcurrencyManagerSingleton
 
 
 def test_unsupported_concurrency_type():
@@ -9,10 +9,10 @@ def test_unsupported_concurrency_type():
     # When getting the concurrency manager
     error = None
     try:
-        ConcurrencyManager._instance = None
-        ConcurrencyManager.get(concurrency_type=incorrect_concurrency_type, concurrency=4)
-    except ConcurrencyTypeNotSupported as e:
-        error = e
+        ConcurrencyManagerSingleton.reset()
+        ConcurrencyManagerSingleton.get(concurrency_type=incorrect_concurrency_type, concurrency=4)
+    except ConcurrencyTypeNotSupported as err:
+        error = err
     finally:
         # Then a helpful error should be raised
         assert (

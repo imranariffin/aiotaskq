@@ -1,5 +1,5 @@
 from aiotaskq.exceptions import UrlNotSupported
-from aiotaskq.pubsub import PubSub
+from aiotaskq.pubsub import PubSubSingleton
 
 
 def test_invalid_url():
@@ -9,10 +9,10 @@ def test_invalid_url():
     # When getting a pubsub instance using the url
     error = None
     try:
-        PubSub._instance = None
-        PubSub.get(url=unsupported_pubsub_url, poll_interval_s=1.0)
-    except UrlNotSupported as e:
-        error = e
+        PubSubSingleton.reset()
+        PubSubSingleton.get(url=unsupported_pubsub_url, poll_interval_s=1.0)
+    except UrlNotSupported as err:
+        error = err
     finally:
         # Then a helpful error should be raised
         assert str(error) == 'Url "cache+memcached://127.0.0.1:11211/" is currently not supported.'

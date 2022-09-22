@@ -10,7 +10,7 @@ import uuid
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
 from .exceptions import ModuleInvalidForTask
 from .interfaces import IPubSub, PollResponse
-from .pubsub import PubSub
+from .pubsub import PubSubSingleton
 
 RT = t.TypeVar("RT")
 P = t.ParamSpec("P")
@@ -34,11 +34,11 @@ class AsyncResult(t.Generic[RT]):
     def __init__(self, task_id: str) -> None:
         """Store task_id in AsyncResult instance."""
         self._task_id = task_id
-        self.pubsub = PubSub.get(url=REDIS_URL, poll_interval_s=0.01)
+        self.pubsub = PubSubSingleton.get(url=REDIS_URL, poll_interval_s=0.01)
 
     async def get(self) -> RT:
         """Return the result of the task once finished."""
-        async with self.pubsub as pubsub:
+        async with self.pubsub as pubsub:  # pylint: disable=not-async-context-manager
             message: PollResponse
             await pubsub.subscribe(RESULTS_CHANNEL_TEMPLATE.format(task_id=self._task_id))
             message = await self.pubsub.poll()
@@ -111,10 +111,10 @@ class Task(t.Generic[P, RT]):
                 "kwargs": kwargs,
             }
         )
-        pubsub_ = PubSub.get(
+        pubsub_ = PubSubSingleton.get(
             url=REDIS_URL, poll_interval_s=0.01, max_connections=10, decode_responses=True
         )
-        async with pubsub_ as pubsub:
+        async with pubsub_ as pubsub:  # pylint: disable=not-async-context-manager
             logger.debug("Publishing task [task_id=%s, message=%s]", task_id, message)
             await pubsub.publish(TASKS_CHANNEL, message=message)
 
