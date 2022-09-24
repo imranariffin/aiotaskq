@@ -27,7 +27,14 @@ Usage::
 
 """
 
+from pathlib import Path
+
+import tomlkit
+
 from .task import task
 
+with Path("pyproject.toml").open("r", encoding="utf-8") as f:
+    toml_dict = tomlkit.loads(f.read())
+    __version__ = toml_dict["project"]["version"]
 
-__all__ = ["task"]
+__all__ = ["__version__", "task"]

@@ -8,8 +8,22 @@ import typer
 
 from .interfaces import ConcurrencyType
 from .worker import Defaults, run_worker_forever
+from . import __version__
 
 cli = typer.Typer()
+
+
+def _version_callback(value: bool):
+    """Ensure print the current version and exit cli if `--version` param is provided."""
+    if value:
+        typer.echo(__version__)
+        raise typer.Exit()
+
+
+# pylint: disable=unused-argument
+@cli.callback()
+def aiotaskq(version: bool = typer.Option(None, "--version", callback=_version_callback)):
+    """A simple asynchronous task queue."""
 
 
 @cli.command(name="worker")
