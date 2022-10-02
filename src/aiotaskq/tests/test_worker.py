@@ -1,12 +1,11 @@
 import multiprocessing
 import os
-import signal
 import subprocess
 from typing import TYPE_CHECKING
 
 import pytest
-from aiotaskq.interfaces import ConcurrencyType
 
+from aiotaskq.interfaces import ConcurrencyType
 from aiotaskq.worker import validate_input
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -43,7 +42,7 @@ async def test_concurrency_starts_child_workers_with_default_concurrency(
 
     # Then the number of child worker processes spawned should be the same
     # as cpu core on machine
-    with os.popen(f"pgrep -P {worker.proc.pid} | wc -l") as child_process_counter:
+    with os.popen(f"pgrep -P {worker.pid} | wc -l") as child_process_counter:
         child_process_count = int(child_process_counter.read())
     assert child_process_count == cpu_count_on_machine
 
@@ -61,8 +60,8 @@ def test_incorrect_app():
                 '"some.incorrect.app.name" is not a path to a valid Python module'
             )
             assert output_expected in output
-        # And exit immediately with an error exit code
-        assert worker_cli_process.returncode == 1
+    # And exit immediately with an error exit code
+    assert worker_cli_process.returncode == 1
 
 
 def test_validate_input():
@@ -99,22 +98,20 @@ async def test_handle_keyboard_interrupt(worker: "WorkerFixture"):
     concurrency = 4
     await worker.start("aiotaskq.tests.apps.simple_app", concurrency=concurrency)
     bash_command = (
-        "pidof $(which python) "  # Get pids of all python processes
-        "| tr ' ' '\\n' "  # Break single line into multiple lines for easier processing
-        f"| grep -v {os.getpid()} "  # Filter out this current process
+        f"pgrep -P {worker.proc.pid} "  # Get pids of all child processes of the worker
         "| wc -l"  # Count the number of pids
     )
     with os.popen(bash_command) as process_counter:
         process_count_before = int(process_counter.read())
-    assert process_count_before == concurrency + 1  # workers (concurrent) + worker manager (1)
+    assert process_count_before == concurrency
 
     # When SIGINT signal (Keyboard Interrupt aka Ctrl-C) is sent to the worker process
-    os.kill(worker.proc.pid, signal.SIGINT)
+    worker.interrupt()
 
     # Then all child processes should be terminated
     with os.popen(bash_command) as process_counter:
         process_count_after = int(process_counter.read())
-    assert process_count_after == process_count_before - (concurrency + 1)
+    assert process_count_after == 0
 
 
 @pytest.mark.asyncio
@@ -123,22 +120,20 @@ async def test_handle_termination_signal(worker: "WorkerFixture"):
     concurrency = 4
     await worker.start("aiotaskq.tests.apps.simple_app", concurrency=concurrency)
     bash_command = (
-        "pidof $(which python) "  # Get pids of all python processes
-        "| tr ' ' '\\n' "  # Break single line into multiple lines for easier processing
-        f"| grep -v {os.getpid()} "  # Filter out this current process
+        f"pgrep -P {worker.proc.pid} "  # Get pids of all child processes of the worker
         "| wc -l"  # Count the number of pids
     )
     with os.popen(bash_command) as process_counter:
         process_count_before = int(process_counter.read())
-    assert process_count_before == concurrency + 1  # workers (concurrent) + worker manager (1)
+    assert process_count_before == concurrency
 
     # When SIGTERM signal (Termination signal) is sent to the worker process
-    os.kill(worker.proc.pid, signal.SIGTERM)
+    worker.terminate()
 
     # Then all child processes should be terminated
     with os.popen(bash_command) as process_counter:
         process_count_after = int(process_counter.read())
-    assert process_count_after == process_count_before - (concurrency + 1)
+    assert process_count_after == 0
 
 
 class WrapClose:

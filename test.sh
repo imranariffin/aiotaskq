@@ -1,15 +1,17 @@
 pip install --upgrade pip
-pip install pytest
-pip install pytest-asyncio
-pip install coverage
+pip install -e .[dev]
 
 coverage erase
 
 if [ -z $1 ];
 then
-    coverage run -m pytest -v -s
+    coverage run -m pytest -v
 else
-    coverage run -m pytest -v -s -k $1
+    coverage run -m pytest -v -k $1
 fi
 
+failed=$?
+
 coverage combine
+
+exit $failed
