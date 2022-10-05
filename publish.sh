@@ -9,6 +9,8 @@ else
     new_version=$(git diff HEAD~1 -- pyproject.toml | grep '^\+version' | tr -dc '0-9.')
 fi
 
+echo "On branch \"$_current_git_branch\": old_version=\"$old_version\", new_version=\"$new_version\""
+
 if [ -z "$new_version" ]
 then
     echo "Changes not meant as a new version. Aborting."
