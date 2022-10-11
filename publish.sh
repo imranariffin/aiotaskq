@@ -1,5 +1,5 @@
-current_git_branch=$(git branch | grep -e '^*\s.*' | cut -d" " -f2 | tr -d "\n")
-is_main_branch=$(echo $current_git_branch | tr -d "\n" | grep -E "^(origin\/)?main$")
+current_git_branch=$(git name-rev --name-only HEAD)
+is_main_branch=$(echo $current_git_branch | tr -d "\n" | grep -E "^main$")
 if [[ -z "$is_main_branch" ]]
 then
     old_version=$(git diff origin/main -- pyproject.toml | grep '^\-version' | tr -dc '0-9.')
@@ -9,7 +9,7 @@ else
     new_version=$(git diff HEAD~1 -- pyproject.toml | grep '^\+version' | tr -dc '0-9.')
 fi
 
-echo "On branch \"$_current_git_branch\": old_version=\"$old_version\", new_version=\"$new_version\""
+echo "On branch \"$current_git_branch\": old_version=\"$old_version\", new_version=\"$new_version\""
 
 if [ -z "$new_version" ]
 then
