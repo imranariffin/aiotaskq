@@ -1,5 +1,5 @@
 current_git_branch=$(git name-rev --name-only HEAD)
-is_main_branch=$(echo $current_git_branch | tr -d "\n" | grep -E "^main$")
+is_main_branch=$(echo $current_git_branch | tr -d "\n" | grep -E "(^|^remotes\/origin\/)main$")
 if [[ -z "$is_main_branch" ]]
 then
     old_version=$(git diff origin/main -- pyproject.toml | grep '^\-version' | tr -dc '0-9.')
