@@ -2,7 +2,7 @@ import pytest
 
 from aiotaskq.task import Task
 from aiotaskq.tests.conftest import WorkerFixture
-from .apps.simple_app import app as simple_app
+from .apps.simple_app import tasks as simple_app
 
 
 @pytest.mark.asyncio
