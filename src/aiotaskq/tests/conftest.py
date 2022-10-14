@@ -16,9 +16,9 @@ class WorkerFixture:
     async def start(
         self,
         app: str,
-        concurrency: t.Optional[int] = Defaults.concurrency,
-        concurrency_type: t.Optional[ConcurrencyType] = Defaults.concurrency_type,
-        poll_interval_s: t.Optional[float] = Defaults.poll_interval_s,
+        concurrency: int = Defaults.concurrency,
+        concurrency_type: ConcurrencyType = Defaults.concurrency_type,
+        poll_interval_s: float = Defaults.poll_interval_s,
     ) -> None:
         proc = multiprocessing.Process(
             target=lambda: run_worker_forever(

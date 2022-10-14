@@ -12,10 +12,18 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Sample App",
+            "name": "Sample App (Simple App)",
             "type": "python",
             "request": "launch",
-            "module": "aiotaskq.tests.apps.simple_app",
+            "module": "aiotaskq.tests.apps.simple_app.app",
+            "args": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Sample App (Simple App Starlette)",
+            "type": "python",
+            "request": "launch",
+            "module": "aiotaskq.tests.apps.simple_app_starlette.app",
             "args": [],
             "console": "integratedTerminal"
         },
@@ -40,7 +48,18 @@
             "module": "aiotaskq",
             "args": [
                 "worker",
-                "aiotaskq.tests.apps.simple_app"
+                "aiotaskq.tests.apps.simple_app.tasks"
+            ],
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Sample Worker (Simple App Starlette)",
+            "type": "python",
+            "request": "launch",
+            "module": "aiotaskq",
+            "args": [
+                "worker",
+                "aiotaskq.tests.apps.simple_app_starlette.tasks"
             ],
             "console": "integratedTerminal",
         }

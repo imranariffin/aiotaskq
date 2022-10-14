@@ -1,5 +1,6 @@
 # aiotaskq
 
+[![PyPI version](https://badge.fury.io/py/aiotaskq.svg)](https://badge.fury.io/py/aiotaskq)
 [![codecov](https://codecov.io/gh/imranariffin/aiotaskq/branch/main/graph/badge.svg)](https://codecov.io/gh/imranariffin/aiotaskq)
 [![build](https://github.com/imranariffin/aiotaskq/actions/workflows/build.yaml/badge.svg)](https://github.com/imranariffin/aiotaskq/actions/workflows/build.yaml)
 [![pylint](https://github.com/imranariffin/aiotaskq/actions/workflows/pylint.yaml/badge.svg)](https://github.com/imranariffin/aiotaskq/actions/workflows/pylint.yaml)
