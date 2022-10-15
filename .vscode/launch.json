@@ -25,7 +25,8 @@
             "request": "launch",
             "module": "aiotaskq.tests.apps.simple_app_starlette.app",
             "args": [],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": false
         },
         {
             "name": "Test",
@@ -62,6 +63,16 @@
                 "aiotaskq.tests.apps.simple_app_starlette.tasks"
             ],
             "console": "integratedTerminal",
-        }
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Debug Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "purpose": ["debug-test"],
+            "console": "integratedTerminal",
+            "justMyCode": false
+          }
     ]
 }

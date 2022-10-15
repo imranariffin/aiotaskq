@@ -5,6 +5,7 @@ import signal
 import typing as t
 
 import pytest
+import uvicorn
 
 from aiotaskq.interfaces import ConcurrencyType
 from aiotaskq.worker import Defaults, run_worker_forever
@@ -63,3 +64,31 @@ def worker():
     yield worker_
     worker_.terminate()
     worker_.close()
+
+
+class ServerStarletteFixture:
+    proc: multiprocessing.Process
+
+    async def start(self, app: str):
+        proc = multiprocessing.Process(target=lambda: uvicorn.run(app=app))
+        proc.start()
+        await asyncio.sleep(1.0)
+        self.proc = proc
+
+    def terminate(self):
+        """Send TERM signal to the worker process, and wait for it to exit."""
+        if self.proc.is_alive():
+            self.proc.terminate()
+            self.proc.join(timeout=5)
+
+    def close(self) -> None:
+        """Release all resources belonging to the worker process."""
+        self.proc.close()
+
+
+@pytest.fixture
+def server_starlette():
+    server = ServerStarletteFixture()
+    yield server
+    server.terminate()
+    server.close()

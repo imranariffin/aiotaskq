@@ -8,7 +8,7 @@ def add(x: int, y: int) -> int:
 
 @aiotaskq.task
 def power(a: int, b: int = 1) -> int:
-    return a ** b
+    return a**b
 
 
 @aiotaskq.task
