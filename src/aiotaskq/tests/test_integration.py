@@ -32,9 +32,9 @@ async def test_sync_and_async_parity__simple_app_starlette(
     worker: WorkerFixture,
     server_starlette: ServerStarletteFixture,
 ):
-    # Given a simple app running as a worker
+    # Given a simple starlette app running as a worker
     await worker.start(app=simple_app_starlette_worker.__name__)
-    # And the corresponding starlette simple app running as a server
+    # And a simple starlette app running as a server
     await server_starlette.start(app=f"{simple_app_starlette.__name__}:app")
 
     # Then there should be parity between sync and async call of the tasks
