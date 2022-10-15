@@ -1,4 +1,3 @@
-from email import header
 import httpx
 import pytest
 
