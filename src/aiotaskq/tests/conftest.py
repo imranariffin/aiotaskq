@@ -4,6 +4,7 @@ import os
 import signal
 import typing as t
 
+import httpx
 import pytest
 import uvicorn
 
@@ -72,7 +73,7 @@ class ServerStarletteFixture:
     async def start(self, app: str):
         proc = multiprocessing.Process(target=lambda: uvicorn.run(app=app))
         proc.start()
-        await asyncio.sleep(1.0)
+        await self._wait_server_ready()
         self.proc = proc
 
     def terminate(self):
@@ -84,6 +85,21 @@ class ServerStarletteFixture:
     def close(self) -> None:
         """Release all resources belonging to the worker process."""
         self.proc.close()
+
+    async def _wait_server_ready(self) -> None:
+        async def _is_ready(client_: httpx.AsyncClient) -> bool:
+            try:
+                response = await client_.get(
+                    "http://127.0.0.1:8000/healthcheck/", follow_redirects=True
+                )
+                return response.status_code == 200
+            except httpx.ConnectError:
+                # Server not serving yet
+                return False
+
+        async with httpx.AsyncClient() as client:
+            while not (await _is_ready(client_=client)):
+                await asyncio.sleep(0.01)
 
 
 @pytest.fixture

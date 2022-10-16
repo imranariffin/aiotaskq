@@ -44,11 +44,16 @@ async def fibonacci(request: Request) -> JSONResponse:
     return JSONResponse(content=content, status_code=201)
 
 
+async def healthcheck(request: Request) -> JSONResponse:
+    return JSONResponse(content={}, status_code=200)
+
+
 routes = [
     Route("/add", add, methods=["POST"]),
     Route("/power", power, methods=["POST"]),
     Route("/join", join, methods=["POST"]),
     Route("/fibonacci", fibonacci, methods=["POST"]),
+    Route("/healthcheck", healthcheck, methods=["GET"]),
 ]
 
 app = Starlette(debug=True, routes=routes)
