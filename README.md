@@ -175,6 +175,11 @@ if __name__ == "__main__":
 pip install aiotaskq
 ```
 
+## Docs
+
+See [docs](/docs/DOCS.md)
+
+
 ## Development
 
 ```bash

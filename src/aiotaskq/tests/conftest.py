@@ -98,7 +98,7 @@ class ServerStarletteFixture:
                 return False
 
         async with httpx.AsyncClient() as client:
-            while not (await _is_ready(client_=client)):
+            while not (await _is_ready(client_=client)):  # pylint: disable=superfluous-parens
                 await asyncio.sleep(0.01)
 
 
