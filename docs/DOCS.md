@@ -156,7 +156,7 @@ async def fibonacci(request: Request) -> JSONResponse:
     return JSONResponse(content=content, status_code=201)
 
 
-async def healthcheck(request: Request) -> JSONResponse:
+async def healthcheck(request: Request) -> JSONResponse:  # pylint: disable=unused-argument
     return JSONResponse(content={}, status_code=200)
 
 

@@ -13,7 +13,7 @@ else
     expect_no_change=false
 fi
 
-npx embedme docs/DOCS.md
+npm run update-docs -- docs/DOCS.md
 
 if [ "$expect_no_change" == "true" ]
 then
