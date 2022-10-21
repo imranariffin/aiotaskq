@@ -8,11 +8,11 @@ TODO (Issue [#43](https://github.com/imranariffin/aiotaskq/issues/43))
 
 ## Guides
 
-1. [Sample usage (Simple App)](#1-sample-usage---starlette-simple-app)
+1. [Sample usage (Simple App)](#1-sample-usage---simple-app)
 2. [Advanced usage (Simple App)](#2-advanced-usage---simple-app)
 3. [Sample usage (Starlette Simple App)](#3-sample-usage---starlette-simple-app)
 
-### 1. Sample usage - Starlette Simple App
+### 1. Sample usage - Simple App
 
 You can define a simple app with this structure:
 
@@ -76,6 +76,8 @@ async def test_sync_and_async_parity__simple_app(worker: WorkerFixture):
         async_result = await task.apply_async(*args, **kwargs)
         assert async_result == sync_result, f"{async_result} != {sync_result}"
 ```
+
+For full example, see [src/aiotaskq/tests/apps/simple_app/](../src/aiotaskq/tests/apps/simple_app/)
 
 ### 2. Advanced usage - Simple App
 
@@ -236,3 +238,5 @@ async def test_sync_and_async_parity__simple_app_starlette(
             response_data_expected = sync_result
             assert response_data_actual == response_data_expected
 ```
+
+For full example, see [src/aiotaskq/tests/apps/simple_app_starlette/](../src/aiotaskq/tests/apps/simple_app_starlette/)
