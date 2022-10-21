@@ -1,31 +1,17 @@
 set -ex
 npm --version
 npm install embedme 2> /dev/null > /dev/null
+npm run update-docs -- docs/DOCS.md
 
 set +ex
 
-gitdiff=$(git diff)
+echo "Expecting no changes to docs/DOCS.md, checking ..."
+gitdiff=$(git diff -- docs/DOCS.md)
 if [ -z "$gitdiff" ]
 then
-    expect_no_change=true
+    echo "Changes to doc/DOCS.md was already committed. Good."
 else
-    expect_no_change=false
-fi
-
-npm run update-docs -- docs/DOCS.md
-
-if [ "$expect_no_change" == "true" ]
-then
-    echo "Expecting no changes to docs, checking ..."
-    gitdiff=$(git diff)
-    if [ -z "$gitdiff" ]
-    then
-        echo "No changes to doc. Good."
-    else
-        echo "Detected some changes to doc, exiting with error."
-        echo "Please run ./update-docs.sh, verify the changes & commit if appropriate."
-        exit 1
-    fi
-else
-    echo "Not checking for changes in docs. Good."
+    echo "Missing changes to docs/DOCS.md that are supposed to be commited, exiting with error."
+    echo "Please run ./update-docs.sh, verify the changes & commit appropriately."
+    exit 1
 fi
