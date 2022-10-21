@@ -19,30 +19,11 @@ You can define a simple app with this structure:
 ```bash
 $ tree src/aiotaskq/tests/apps/simple_app/
 src/aiotaskq/tests/apps/simple_app/
-├── app.py
 ├── __init__.py
 └── tasks.py
 ```
-Where this is the entrypoint of the main app:
 
-```py
-# ../src/aiotaskq/tests/apps/simple_app/app.py
-
-from .tasks import join
-
-
-if __name__ == "__main__":  # pragma: no cover
-    from asyncio import get_event_loop
-
-    async def main():
-        ret = await join.apply_async(["Hello", "World"], delimiter=" ")
-        print(ret)
-
-    loop = get_event_loop()
-    loop.run_until_complete(main())
-
-```
-And this is the definition of the tasks:
+Where this is the definition of the tasks:
 ```py
 # ../src/aiotaskq/tests/apps/simple_app/tasks.py
 
@@ -75,6 +56,7 @@ def some_task(b: int) -> int:
     return _naive_fib(b)
 
 ```
+
 You can expect that result of function calls in current process are the same as that in worker processes:
 ```py
 # ../src/aiotaskq/tests/test_integration.py#L14-L27
@@ -94,6 +76,10 @@ async def test_sync_and_async_parity__simple_app(worker: WorkerFixture):
         async_result = await task.apply_async(*args, **kwargs)
         assert async_result == sync_result, f"{async_result} != {sync_result}"
 ```
+
+### 2. Advanced usage - Simple App
+
+TODO
 
 ### 3. Sample usage - Starlette Simple App
 
