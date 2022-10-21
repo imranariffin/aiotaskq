@@ -4,12 +4,12 @@
 
 ## API References
 
-TODO
+TODO (Issue [#43](https://github.com/imranariffin/aiotaskq/issues/43))
 
 ## Guides
 
 1. [Sample usage (Simple App)](#1-sample-usage---starlette-simple-app)
-2. Advanced usage (Simple App)
+2. [Advanced usage (Simple App)](#2-advanced-usage---simple-app)
 3. [Sample usage (Starlette Simple App)](#3-sample-usage---starlette-simple-app)
 
 ### 1. Sample usage - Starlette Simple App
@@ -79,7 +79,7 @@ async def test_sync_and_async_parity__simple_app(worker: WorkerFixture):
 
 ### 2. Advanced usage - Simple App
 
-TODO
+TODO (Issue [#44](https://github.com/imranariffin/aiotaskq/issues/44))
 
 ### 3. Sample usage - Starlette Simple App
 
