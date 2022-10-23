@@ -18,7 +18,6 @@ from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSubSingleton
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

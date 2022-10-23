@@ -15,7 +15,6 @@ from .pubsub import PubSubSingleton
 RT = t.TypeVar("RT")
 P = t.ParamSpec("P")
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 

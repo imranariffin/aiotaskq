@@ -5,7 +5,7 @@ npm run update-docs -- docs/DOCS.md
 
 set +ex
 
-echo "Expecting no changes to docs/DOCS.md, checking ..."
+echo "Expecting no *uncommitted* changes to docs/DOCS.md, checking ..."
 gitdiff=$(git diff -- docs/DOCS.md)
 if [ -z "$gitdiff" ]
 then

@@ -36,7 +36,6 @@ async def test_sync_and_async_parity__simple_app_starlette(
     await worker.start(app=simple_app_starlette_worker.__name__)
     # And a simple starlette app running as a server
     await server_starlette.start(app=f"{simple_app_starlette.__name__}:app")
-    print("TEST")
 
     # Then there should be parity between sync and async call of the tasks
     tests: list[tuple[Task, tuple, dict]] = [

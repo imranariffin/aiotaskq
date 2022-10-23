@@ -1,3 +1,4 @@
+import logging
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.requests import Request
@@ -15,32 +16,32 @@ from .tasks import (
 
 async def add(request: Request) -> JSONResponse:
     body: dict = await request.json()
-    x = body["x"]
-    y = body["y"]
-    content = await add_.apply_async(x, y)
+    x: int = body["x"]
+    y: int = body["y"]
+    content: int = await add_.apply_async(x, y)
     return JSONResponse(content=content, status_code=201)
 
 
 async def power(request: Request) -> JSONResponse:
     body: dict = await request.json()
-    a = body["a"]
-    b = body["b"]
-    content = await power_.apply_async(a=a, b=b)
+    a: int = body["a"]
+    b: int = body["b"]
+    content: int = await power_.apply_async(a=a, b=b)
     return JSONResponse(content=content, status_code=201)
 
 
 async def join(request: Request) -> JSONResponse:
     body: dict = await request.json()
-    ls = body["ls"]
-    delimiter = body.get("delimiter", ",")
+    ls: list = body["ls"]
+    delimiter: str = body.get("delimiter", ",")
     content = await join_.apply_async(ls=ls, delimiter=delimiter)
     return JSONResponse(content=content, status_code=201)
 
 
 async def fibonacci(request: Request) -> JSONResponse:
     body: dict = await request.json()
-    n = body["n"]
-    content = await fibonacci_.apply_async(n=n)
+    n: int = body["n"]
+    content: int = await fibonacci_.apply_async(n=n)
     return JSONResponse(content=content, status_code=201)
 
 
@@ -59,4 +60,4 @@ routes = [
 app = Starlette(debug=True, routes=routes)
 
 if __name__ == "__main__":  # pragma: no cover
-    uvicorn.run(app=app)
+    uvicorn.run(app=app, log_level=logging.ERROR)

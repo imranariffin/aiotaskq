@@ -1,12 +1,17 @@
-# aiotaskq
-
 [Back to README](/README.md)
 
-## API References
+* [API References](#api-references)
+* [Guides](#guides)
+
+# API References
 
 TODO (Issue [#43](https://github.com/imranariffin/aiotaskq/issues/43))
 
-## Guides
+# Guides
+
+Note: We try to provide guides that you can follow along by copy pasting the codes as you read, given that you've already cloned the repository. We believe that's the best way to understand the concepts in full. If there's any guide that doesn't work, please create an issue.
+
+### Outline
 
 1. [Sample usage (Simple App)](#1-sample-usage---simple-app)
 2. [Advanced usage (Simple App)](#2-advanced-usage---simple-app)
@@ -14,13 +19,34 @@ TODO (Issue [#43](https://github.com/imranariffin/aiotaskq/issues/43))
 
 ### 1. Sample usage - Simple App
 
-You can define a simple app with this structure:
+Given a simple app with this structure:
 
 ```bash
-$ tree src/aiotaskq/tests/apps/simple_app/
-src/aiotaskq/tests/apps/simple_app/
-├── __init__.py
-└── tasks.py
+tree src/aiotaskq/tests/apps/simple_app/
+# src/aiotaskq/tests/apps/simple_app/
+# ├── app.py
+# ├── __init__.py
+# └── tasks.py
+```
+
+Where this is the definition of app.py:
+
+```py
+# ../src/aiotaskq/tests/apps/simple_app/app.py
+
+from .tasks import join
+
+
+if __name__ == "__main__":  # pragma: no cover
+    from asyncio import get_event_loop
+
+    async def main():
+        ret = await join.apply_async(["Hello", "World"], delimiter=" ")
+        print(ret)
+
+    loop = get_event_loop()
+    loop.run_until_complete(main())
+
 ```
 
 Where this is the definition of the tasks:
@@ -57,7 +83,34 @@ def some_task(b: int) -> int:
 
 ```
 
-You can expect that result of function calls in current process are the same as that in worker processes:
+Then you can verify that one of the endpoint returns the expected response:
+```bash
+# ./check-guides.sh#L14-L34
+
+echo -e "\n===\nExample usage 1: Sample usage - Simple App\n===\n"
+echo "Run worker in the background & save the pid ..."
+python -m aiotaskq worker aiotaskq.tests.apps.simple_app.tasks & worker_pid=$!
+echo "Run server in the background & save the pid ..."
+python -m aiotaskq.tests.apps.simple_app.app & server_pid=$!
+echo "Wait 1 second(s) for server & worker to be ready ..."
+sleep 1
+echo "Run the app and check the output ..."
+output=$(python -m aiotaskq.tests.apps.simple_app.app)
+set +x
+test "$output" = "Hello World"
+if [ "$?" = "0" ]
+then
+  echo -e "🎉🎉🎉\n\nPass :D"
+else
+  echo -e "⛔⛔⛔\n\nFailed :("
+  failed="1"
+fi
+set -x
+echo "Kill the server & worker processes ..."
+kill -TERM $worker_pid && unset worker_pid
+```
+
+For full example, see [src/aiotaskq/tests/apps/simple_app/test_integration.py](../src/aiotaskq/tests/apps/simple_app/test_integration.py)
 ```py
 # ../src/aiotaskq/tests/test_integration.py#L14-L27
 
@@ -77,8 +130,6 @@ async def test_sync_and_async_parity__simple_app(worker: WorkerFixture):
         assert async_result == sync_result, f"{async_result} != {sync_result}"
 ```
 
-For full example, see [src/aiotaskq/tests/apps/simple_app/](../src/aiotaskq/tests/apps/simple_app/)
-
 ### 2. Advanced usage - Simple App
 
 TODO (Issue [#44](https://github.com/imranariffin/aiotaskq/issues/44))
@@ -88,11 +139,11 @@ TODO (Issue [#44](https://github.com/imranariffin/aiotaskq/issues/44))
 Say you define a simple starlette app with this structure:
 
 ```bash
-$ tree src/aiotaskq/tests/apps/simple_app_starlette/
-src/aiotaskq/tests/apps/simple_app_starlette/
-├── app.py
-├── __init__.py
-└── tasks.py
+tree src/aiotaskq/tests/apps/simple_app_starlette/
+# src/aiotaskq/tests/apps/simple_app_starlette/
+# ├── app.py
+# ├── __init__.py
+# └── tasks.py
 ```
 
 Where this is the main app logic:
@@ -100,6 +151,7 @@ Where this is the main app logic:
 ```py
 # ../src/aiotaskq/tests/apps/simple_app_starlette/app.py
 
+import logging
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.requests import Request
@@ -117,32 +169,32 @@ from .tasks import (
 
 async def add(request: Request) -> JSONResponse:
     body: dict = await request.json()
-    x = body["x"]
-    y = body["y"]
-    content = await add_.apply_async(x, y)
+    x: int = body["x"]
+    y: int = body["y"]
+    content: int = await add_.apply_async(x, y)
     return JSONResponse(content=content, status_code=201)
 
 
 async def power(request: Request) -> JSONResponse:
     body: dict = await request.json()
-    a = body["a"]
-    b = body["b"]
-    content = await power_.apply_async(a=a, b=b)
+    a: int = body["a"]
+    b: int = body["b"]
+    content: int = await power_.apply_async(a=a, b=b)
     return JSONResponse(content=content, status_code=201)
 
 
 async def join(request: Request) -> JSONResponse:
     body: dict = await request.json()
-    ls = body["ls"]
-    delimiter = body.get("delimiter", ",")
+    ls: list = body["ls"]
+    delimiter: str = body.get("delimiter", ",")
     content = await join_.apply_async(ls=ls, delimiter=delimiter)
     return JSONResponse(content=content, status_code=201)
 
 
 async def fibonacci(request: Request) -> JSONResponse:
     body: dict = await request.json()
-    n = body["n"]
-    content = await fibonacci_.apply_async(n=n)
+    n: int = body["n"]
+    content: int = await fibonacci_.apply_async(n=n)
     return JSONResponse(content=content, status_code=201)
 
 
@@ -161,7 +213,7 @@ routes = [
 app = Starlette(debug=True, routes=routes)
 
 if __name__ == "__main__":  # pragma: no cover
-    uvicorn.run(app=app)
+    uvicorn.run(app=app, log_level=logging.ERROR)
 
 ```
 And this is the definition of the tasks:
@@ -197,7 +249,39 @@ def fibonacci(n: int) -> int:
     return _naive_fib(n)
 
 ```
-You can expect that result of function calls in current process are the same as that in worker processes:
+
+Then you can verify that one of the endpoint returns the expected response:
+```bash
+# ./check-guides.sh#L36-L60
+
+echo -e "\n===\nExample usage 3: Sample usage - Starlette Simple App\n===\n"
+echo "Run worker in the background & save the pid ..."
+python -m aiotaskq worker aiotaskq.tests.apps.simple_app_starlette.tasks & worker_pid=$!
+echo "Run server in the background & save the pid ..."
+python -m aiotaskq.tests.apps.simple_app_starlette.app & server_pid=$!
+echo "Wait 1 second(s) for server & worker to be ready ..."
+sleep 1
+echo "Make a request to one of the endpoints & check if correct ..."
+response=$(curl --silent -X POST \
+  http://127.0.0.1:8000/add \
+  -H 'Content-Type: application/json' \
+  -d '{"x": 123, "y": 456}'
+)
+set +x
+test "$response" = "579"
+if [ "$?" = "0" ]
+then
+  echo -e "🎉🎉🎉\n\nPass :D"
+else
+  echo -e "⛔⛔⛔\n\nFailed :("
+  failed="1"
+fi
+set -x
+echo "Kill the server & worker processes"
+kill -TERM $server_pid $worker_pid && unset server_pid worker_pid
+```
+
+For full example, see this test at [../src/aiotaskq/tests/test_integration.py](../src/aiotaskq/tests/test_integration.py):
 ```py
 # ../src/aiotaskq/tests/test_integration.py#L31-L66
 
@@ -238,5 +322,3 @@ async def test_sync_and_async_parity__simple_app_starlette(
             response_data_expected = sync_result
             assert response_data_actual == response_data_expected
 ```
-
-For full example, see [src/aiotaskq/tests/apps/simple_app_starlette/](../src/aiotaskq/tests/apps/simple_app_starlette/)
