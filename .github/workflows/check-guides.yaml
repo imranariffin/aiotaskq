@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - run: docker-compose -f ./docker-compose.yml up --detach redis
     - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
