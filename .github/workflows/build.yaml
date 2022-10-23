@@ -41,6 +41,7 @@ jobs:
   run_tests:
     needs: [check_guides, check_docs]
     timeout-minutes: 10
+    runs-on: ubuntu-latest
     steps:
     - run: ./test.sh
     - uses: codecov/codecov-action@v3.1.0
