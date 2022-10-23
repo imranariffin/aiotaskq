@@ -1,0 +1,19 @@
+name: Check Guides
+on:
+  pull_request:
+    branches:
+    - main
+jobs:
+  lint:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v3
+      with:
+        python-version: "3.10.x"
+    - run: source ./activate.sh
+    - run: pip install --upgrade pip
+    - run: pip install -e .[dev]
+    - run: pip freeze
+    - run: ./docs/check-guides.sh
