@@ -21,7 +21,7 @@ sleep 1
 echo "Run the app and check the output ..."
 output=$(python -m aiotaskq.tests.apps.simple_app.app)
 set +x
-test "$output" = "Hello World"
+test "$output" = "Hello World ZZZ"
 if [ "$?" = "0" ]
 then
   echo -e "🎉🎉🎉\n\nPass :D"
