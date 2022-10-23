@@ -1,14 +1,11 @@
-name: coverage
+name: Check Guides
 on:
   pull_request:
     branches:
     - main
-  push:
-    branches:
-    - main
 jobs:
-  run_unit_tests:
-    timeout-minutes: 10
+  check_guides:
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -20,5 +17,4 @@ jobs:
     - run: pip install --upgrade pip
     - run: pip install -e .[dev]
     - run: pip freeze
-    - run: ./test.sh
-    - uses: codecov/codecov-action@v3.1.0
+    - run: ./docs/check-guides.sh
