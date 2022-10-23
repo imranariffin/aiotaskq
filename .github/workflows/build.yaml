@@ -13,10 +13,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - run: docker-compose -f ./docker-compose.yml up --detach redis
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
-        cache: "pip"
     - run: source ./activate.sh
     - run: pip install --upgrade pip
     - run: pip install -e .[dev]
@@ -27,10 +26,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
-        cache: "pip"
     - uses: actions/setup-node@v3
       with:
         node-version: 16
@@ -42,10 +40,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
-        cache: "pip"
     - run: ./docs/check-guides.sh
 
   run_tests:
@@ -54,10 +51,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
-        cache: "pip"
     - run: ./test.sh
     - uses: codecov/codecov-action@v3.1.0
 
@@ -67,10 +63,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
-        cache: "pip"
     - run: ./lint.sh
   
   publish:
@@ -81,10 +76,12 @@ jobs:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 2  # Ensure that we get previous commit to compare version with
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
-        cache: "pip"
+    - run: pip install --upgrade pip
+    - run: pip install -e .[dev]
+    - run: pip freeze
     - name: Publish
       env:
         PYPI_TOKEN_DEV: ${{ secrets.PYPI_TOKEN_DEV }}
