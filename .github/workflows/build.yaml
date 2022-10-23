@@ -1,4 +1,4 @@
-name: build
+name: coverage
 on:
   pull_request:
     branches:
@@ -6,9 +6,9 @@ on:
   push:
     branches:
     - main
+
 jobs:
-  run_unit_tests:
-    timeout-minutes: 10
+  prepare:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -20,4 +20,53 @@ jobs:
     - run: pip install --upgrade pip
     - run: pip install -e .[dev]
     - run: pip freeze
+
+  check_docs:
+    timeout-minutes: 3
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - run: ./update-docs.sh
+
+  check_guides:
+    needs: prepare
+    timeout-minutes: 1
+    runs-on: ubuntu-latest
+    steps:
+    - run: ./docs/check-guides.sh
+
+  run_tests:
+    needs: [check_guides, check_docs]
+    timeout-minutes: 10
+    steps:
     - run: ./test.sh
+    - uses: codecov/codecov-action@v3.1.0
+
+  lint:
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - run: ./lint.sh
+  
+  publish:
+    needs: [lint, run_tests]
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 2  # Ensure that we get previous commit to compare version with
+    - uses: actions/setup-python@v3
+      with:
+        python-version: "3.10.x"
+    - run: pip install --upgrade pip
+    - run: pip install -e .[dev]
+    - run: pip freeze
+    - name: Publish
+      env:
+        PYPI_TOKEN_DEV: ${{ secrets.PYPI_TOKEN_DEV }}
+        PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+      run: ./publish.sh
