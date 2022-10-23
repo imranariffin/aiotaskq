@@ -16,8 +16,8 @@ echo "Run worker in the background & save the pid ..."
 python -m aiotaskq worker aiotaskq.tests.apps.simple_app.tasks & worker_pid=$!
 echo "Run server in the background & save the pid ..."
 python -m aiotaskq.tests.apps.simple_app.app & server_pid=$!
-echo "Wait 1 second(s) for server & worker to be ready ..."
-sleep 1
+echo "Wait 2 second(s) for server & worker to be ready ..."
+sleep 2
 echo "Run the app and check the output ..."
 output_actual=$(python -m aiotaskq.tests.apps.simple_app.app)
 output_expected="Hello World"
@@ -39,8 +39,8 @@ echo "Run worker in the background & save the pid ..."
 python -m aiotaskq worker aiotaskq.tests.apps.simple_app_starlette.tasks & worker_pid=$!
 echo "Run server in the background & save the pid ..."
 python -m aiotaskq.tests.apps.simple_app_starlette.app & server_pid=$!
-echo "Wait 1 second(s) for server & worker to be ready ..."
-sleep 1
+echo "Wait 2 second(s) for server & worker to be ready ..."
+sleep 2
 echo "Make a request to one of the endpoints & check if correct ..."
 response_actual=$(curl --silent -X POST \
   http://127.0.0.1:8000/add \
