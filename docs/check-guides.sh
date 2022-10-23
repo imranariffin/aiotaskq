@@ -19,9 +19,10 @@ python -m aiotaskq.tests.apps.simple_app.app & server_pid=$!
 echo "Wait 1 second(s) for server & worker to be ready ..."
 sleep 1
 echo "Run the app and check the output ..."
-output=$(python -m aiotaskq.tests.apps.simple_app.app)
+output_actual=$(python -m aiotaskq.tests.apps.simple_app.app)
+output_expected="Hello World"
 set +x
-test "$output" = "Hello World ZZZ"
+test "$output_actual" = "$output_expected"
 if [ "$?" = "0" ]
 then
   echo -e "🎉🎉🎉\n\nPass :D"
@@ -41,13 +42,14 @@ python -m aiotaskq.tests.apps.simple_app_starlette.app & server_pid=$!
 echo "Wait 1 second(s) for server & worker to be ready ..."
 sleep 1
 echo "Make a request to one of the endpoints & check if correct ..."
-response=$(curl --silent -X POST \
+response_actual=$(curl --silent -X POST \
   http://127.0.0.1:8000/add \
   -H 'Content-Type: application/json' \
   -d '{"x": 123, "y": 456}'
 )
+response_expected="579"
 set +x
-test "$response" = "579"
+test "$response_actual" = "$response_expected"
 if [ "$?" = "0" ]
 then
   echo -e "🎉🎉🎉\n\nPass :D"
