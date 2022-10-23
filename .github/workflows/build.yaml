@@ -47,7 +47,6 @@ jobs:
     - uses: codecov/codecov-action@v3.1.0
 
   lint:
-    needs: prepare
     timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
