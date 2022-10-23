@@ -12,7 +12,9 @@ then
     echo "Changes to doc/DOCS.md was already committed. Good."
 else
     echo "Missing changes to docs/DOCS.md that are supposed to be commited:"
-    echo $gitdiff
+    set -ex
+    git diff -- docs/DOCS.md | cat
+    set +ex
     echo "Please run ./update-docs.sh, verify the changes & commit appropriately."
     exit 1
 fi

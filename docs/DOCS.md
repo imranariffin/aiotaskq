@@ -85,7 +85,7 @@ def some_task(b: int) -> int:
 
 Then you can verify that one of the endpoint returns the expected response:
 ```bash
-# ./check-guides.sh#L14-L34
+# ./check-guides.sh#L14-L35
 
 echo -e "\n===\nExample usage 1: Sample usage - Simple App\n===\n"
 echo "Run worker in the background & save the pid ..."
@@ -95,9 +95,10 @@ python -m aiotaskq.tests.apps.simple_app.app & server_pid=$!
 echo "Wait 1 second(s) for server & worker to be ready ..."
 sleep 1
 echo "Run the app and check the output ..."
-output=$(python -m aiotaskq.tests.apps.simple_app.app)
+output_actual=$(python -m aiotaskq.tests.apps.simple_app.app)
+output_expected="Hello World"
 set +x
-test "$output" = "Hello World"
+test "$output_actual" = "$output_expected"
 if [ "$?" = "0" ]
 then
   echo -e "🎉🎉🎉\n\nPass :D"
@@ -252,7 +253,7 @@ def fibonacci(n: int) -> int:
 
 Then you can verify that one of the endpoint returns the expected response:
 ```bash
-# ./check-guides.sh#L36-L60
+# ./check-guides.sh#L37-L62
 
 echo -e "\n===\nExample usage 3: Sample usage - Starlette Simple App\n===\n"
 echo "Run worker in the background & save the pid ..."
@@ -262,13 +263,14 @@ python -m aiotaskq.tests.apps.simple_app_starlette.app & server_pid=$!
 echo "Wait 1 second(s) for server & worker to be ready ..."
 sleep 1
 echo "Make a request to one of the endpoints & check if correct ..."
-response=$(curl --silent -X POST \
+response_actual=$(curl --silent -X POST \
   http://127.0.0.1:8000/add \
   -H 'Content-Type: application/json' \
   -d '{"x": 123, "y": 456}'
 )
+response_expected="579"
 set +x
-test "$response" = "579"
+test "$response_actual" = "$response_expected"
 if [ "$?" = "0" ]
 then
   echo -e "🎉🎉🎉\n\nPass :D"
