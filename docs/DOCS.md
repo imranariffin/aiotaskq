@@ -85,7 +85,10 @@ def some_task(b: int) -> int:
 
 Then you can verify that one of the endpoint returns the expected response:
 ```bash
-# ./check-guides.sh#L14-L35
+# ./check-guides.sh#L14-L38
+
+echo "Wait for redis to be ready ..."
+python ./check_redis_ready.py
 
 echo -e "\n===\nExample usage 1: Sample usage - Simple App\n===\n"
 echo "Run worker in the background & save the pid ..."
@@ -253,7 +256,7 @@ def fibonacci(n: int) -> int:
 
 Then you can verify that one of the endpoint returns the expected response:
 ```bash
-# ./check-guides.sh#L37-L62
+# ./check-guides.sh#L40-L65
 
 echo -e "\n===\nExample usage 3: Sample usage - Starlette Simple App\n===\n"
 echo "Run worker in the background & save the pid ..."
