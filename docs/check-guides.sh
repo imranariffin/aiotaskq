@@ -11,6 +11,9 @@
 
 set -x
 
+echo "Wait for redis to be ready ..."
+python ./check_redis_ready.py
+
 echo -e "\n===\nExample usage 1: Sample usage - Simple App\n===\n"
 echo "Run worker in the background & save the pid ..."
 python -m aiotaskq worker aiotaskq.tests.apps.simple_app.tasks & worker_pid=$!

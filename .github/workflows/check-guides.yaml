@@ -18,3 +18,4 @@ jobs:
     - run: pip install -e .[dev]
     - run: pip freeze
     - run: ./docs/check-guides.sh
+    - run: docker-compose -f ./docker-compose.yml stop
