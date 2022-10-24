@@ -4,7 +4,9 @@ import os
 import signal
 import typing as t
 
+import httpx
 import pytest
+import uvicorn
 
 from aiotaskq.interfaces import ConcurrencyType
 from aiotaskq.worker import Defaults, run_worker_forever
@@ -16,9 +18,9 @@ class WorkerFixture:
     async def start(
         self,
         app: str,
-        concurrency: t.Optional[int] = Defaults.concurrency,
-        concurrency_type: t.Optional[ConcurrencyType] = Defaults.concurrency_type,
-        poll_interval_s: t.Optional[float] = Defaults.poll_interval_s,
+        concurrency: int = Defaults.concurrency,
+        concurrency_type: ConcurrencyType = Defaults.concurrency_type,
+        poll_interval_s: float = Defaults.poll_interval_s,
     ) -> None:
         proc = multiprocessing.Process(
             target=lambda: run_worker_forever(
@@ -63,3 +65,46 @@ def worker():
     yield worker_
     worker_.terminate()
     worker_.close()
+
+
+class ServerStarletteFixture:
+    proc: multiprocessing.Process
+
+    async def start(self, app: str):
+        proc = multiprocessing.Process(target=lambda: uvicorn.run(app=app))
+        proc.start()
+        await self._wait_server_ready()
+        self.proc = proc
+
+    def terminate(self):
+        """Send TERM signal to the worker process, and wait for it to exit."""
+        if self.proc.is_alive():
+            self.proc.terminate()
+            self.proc.join(timeout=5)
+
+    def close(self) -> None:
+        """Release all resources belonging to the worker process."""
+        self.proc.close()
+
+    async def _wait_server_ready(self) -> None:
+        async def _is_ready(client_: httpx.AsyncClient) -> bool:
+            try:
+                response = await client_.get(
+                    "http://127.0.0.1:8000/healthcheck/", follow_redirects=True
+                )
+                return response.status_code == 200
+            except httpx.ConnectError:
+                # Server not serving yet
+                return False
+
+        async with httpx.AsyncClient() as client:
+            while not (await _is_ready(client_=client)):  # pylint: disable=superfluous-parens
+                await asyncio.sleep(0.01)
+
+
+@pytest.fixture
+def server_starlette():
+    server = ServerStarletteFixture()
+    yield server
+    server.terminate()
+    server.close()

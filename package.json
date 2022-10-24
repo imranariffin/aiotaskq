@@ -1,0 +1,14 @@
+{
+  "name": "aiotaskq",
+  "version": "1.0.0",
+  "main": "npx",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "update-docs": "embedme"
+  },
+  "dependencies": {
+    "embedme": "^1.22.1"
+  }
+}

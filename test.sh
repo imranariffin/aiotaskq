@@ -3,6 +3,9 @@ pip install -e .[dev]
 
 coverage erase
 
+echo "Wait for redis to be ready ..."
+python ./check_redis_ready.py
+
 if [ -z $1 ];
 then
     coverage run -m pytest -v

@@ -21,4 +21,5 @@ jobs:
     - run: pip install -e .[dev]
     - run: pip freeze
     - run: ./test.sh
+    - run: docker-compose -f ./docker-compose.yml stop
     - uses: codecov/codecov-action@v3.1.0
