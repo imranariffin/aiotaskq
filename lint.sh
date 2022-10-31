@@ -1,6 +1,3 @@
-pip install --upgrade pip
-pip install -e .[dev]
-
 if [ -z $1 ];
 then
     pylint -v --rcfile ./.pylintrc src/aiotaskq

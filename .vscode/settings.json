@@ -12,5 +12,6 @@
     "python.testing.unittestEnabled": false,
     "python.analysis.extraPaths": [
         "src/tests/"
-    ]
+    ],
+    "python.defaultInterpreterPath": "../.venv/bin/python3"
 }

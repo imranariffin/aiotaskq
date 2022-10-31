@@ -43,6 +43,18 @@
                 "tests.apps.simple_app"
             ],
             "console": "integratedTerminal",
+        },
+        {
+            "name": "Sample Worker (Simple App Celery)",
+            "type": "python",
+            "request": "launch",
+            "module": "celery",
+            "args": [
+                "-A",
+                "aiotaskq.tests.apps.simple_app_celery",
+                "worker",
+            ],
+            "justMyCode": false
         }
     ]
 }

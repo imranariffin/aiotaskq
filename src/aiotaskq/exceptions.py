@@ -15,3 +15,7 @@ class UrlNotSupported(Exception):
 
 class ConcurrencyTypeNotSupported(Exception):
     """This concurrency type is currently not supported."""
+
+
+class AppImportError(ImportError):
+    """App or module import path provided is invalid."""

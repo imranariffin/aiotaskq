@@ -11,8 +11,8 @@ import os
 import signal
 import sys
 import typing as t
-import types
 
+from .app import Aiotaskq
 from .concurrency_manager import ConcurrencyManagerSingleton
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
@@ -31,12 +31,12 @@ class BaseWorker(ABC):
     where you write your `while True: some_logic`.
     """
 
-    app: types.ModuleType
+    app: Aiotaskq
     pubsub: IPubSub
     concurrency_manager: IConcurrencyManager
 
     def __init__(self, app_import_path: str):
-        self.app = importlib.import_module(app_import_path)
+        self.app = Aiotaskq.from_import_path(app_or_module_path=app_import_path)
 
     def run_forever(self) -> None:
         """
@@ -166,7 +166,7 @@ class WorkerManager(BaseWorker):
     def _start_grunt_workers(self):
         def _run_grunt_worker_forever():
             grunt_worker = GruntWorker(
-                app_import_path=self.app.__name__,
+                app_import_path=self.app.import_path,
                 poll_interval_s=self._poll_interval_s,
             )
             grunt_worker.run_forever()

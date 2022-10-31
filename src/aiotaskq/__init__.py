@@ -27,7 +27,9 @@ Usage::
 
 """
 
+import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import tomlkit
 
@@ -38,3 +40,7 @@ with Path("pyproject.toml").open("r", encoding="utf-8") as f:
     __version__ = toml_dict["project"]["version"]
 
 __all__ = ["__version__", "task"]
+
+# if os.environ["ENV"] == "test" or TYPE_CHECKING:
+from . import tests
+__all__ += ["tests"]
