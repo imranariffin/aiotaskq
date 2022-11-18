@@ -20,6 +20,14 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Sample App Celery",
+            "type": "python",
+            "request": "launch",
+            "module": "aiotaskq.tests.apps.simple_app_celery.app",
+            "args": [],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Test",
             "type": "python",
             "module": "coverage",

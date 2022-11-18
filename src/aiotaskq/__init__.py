@@ -27,20 +27,15 @@ Usage::
 
 """
 
-import os
-from pathlib import Path
-from typing import TYPE_CHECKING
+import importlib
 
-import tomlkit
-
+from .app import Aiotaskq
 from .task import task
 
-with Path("pyproject.toml").open("r", encoding="utf-8") as f:
-    toml_dict = tomlkit.loads(f.read())
-    __version__ = toml_dict["project"]["version"]
+__version__ = importlib.metadata.version("aiotaskq")
 
-__all__ = ["__version__", "task"]
+__all__ = ["__version__", "task", "Aiotaskq"]
 
-# if os.environ["ENV"] == "test" or TYPE_CHECKING:
-from . import tests
-__all__ += ["tests"]
+# # if os.environ["ENV"] == "test" or TYPE_CHECKING:
+# from . import tests
+# __all__ += ["tests"]

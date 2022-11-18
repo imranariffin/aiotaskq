@@ -1,5 +1,6 @@
 import importlib
 import inspect
+from types import ModuleType
 import typing as t
 
 from .exceptions import AppImportError
@@ -12,13 +13,24 @@ class Aiotaskq:
     import_path: str
     task_map: dict[str, Task] = {}
 
-    def __init__(self, import_path: t.Optional[str] = None, tasks: t.Optional[list[Task]] = None):
+    def __init__(
+        self, 
+        import_path: t.Optional[str] = None, 
+        tasks: t.Optional[list[Task]] = None,
+        include: t.Optional[list[str]] = None,
+    ):
         self.import_path = (
             import_path 
             if import_path is not None 
             else inspect.getmodule(self).__name__  # type: ignore
         )
         self.task_map = {task_.__name__: task_ for task_ in tasks} if tasks else {}
+        if include is not None:
+            for module_path in include:
+                module = importlib.import_module(module_path)
+                tasks = self._extract_tasks(app_or_module=module)
+                print(f"module {module}, tasks: {tasks}")
+                self.task_map.update({task_.__name__: task_ for task_ in tasks})
 
     def __getattribute__(self, attr_name: str) -> t.Any:
         try:
@@ -62,7 +74,10 @@ class Aiotaskq:
                 # Import path points to an Aiotaskq instance -- use it.
                 print("\n1")
                 app = app_or_module
-            elif hasattr(app_or_module, "app") and isinstance(getattr(app_or_module, "app"), Aiotaskq):
+            elif (
+                hasattr(app_or_module, "app") 
+                and isinstance(getattr(app_or_module, "app"), Aiotaskq)
+            ):
                 # Import path points to a module that contains an Aiotaskq instance
                 # named as `app` -- retrieve the instance and use it.
                 print("\n2")
@@ -100,7 +115,7 @@ class Aiotaskq:
         return task_
 
     @classmethod
-    def _extract_tasks(cls, app_or_module: t.Any) -> list[Task]:
+    def _extract_tasks(cls, app_or_module: "Aiotaskq | ModuleType") -> list[Task]:
         return [
             getattr(app_or_module, attr)
             for attr in app_or_module.__dict__

@@ -118,6 +118,9 @@ class WorkerManager(BaseWorker):
         )
         self._poll_interval_s = poll_interval_s
         super().__init__(app_import_path=app_import_path)
+        self._logger.debug("Tasks list:")
+        for task in self.app.task_map.keys():
+            self._logger.debug("* %s", task)
 
     async def _pre_run(self):
         self._logger.info("Starting %s back workers", self.concurrency_manager.concurrency)
