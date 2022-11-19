@@ -122,8 +122,15 @@ venv.bak/
 
 # Sample Apps
 
-sample_apps/*/pyproject.toml
-sample_apps/*/build/
+src/sample_apps/pyproject.toml
+src/sample_apps/.Python
+src/sample_apps/build/
+src/sample_apps/develop-eggs/
+src/sample_apps/dist/
+src/sample_apps/eggs/
+src/sample_apps/.eggs/
+src/sample_apps/*.egg-info/
+src/sample_apps/*.egg
 
 # Spyder project settings
 .spyderproject
