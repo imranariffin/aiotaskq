@@ -1,10 +1,14 @@
+"""Define the logic to create an aiotaskq app instance."""
+
 import importlib
 import inspect
-from types import ModuleType
 import typing as t
 
 from .exceptions import AppImportError
 from .task import task, Task, P, RT
+
+if t.TYPE_CHECKING:  # pragma: no cover
+    from types import ModuleType
 
 
 class Aiotaskq:
@@ -14,14 +18,14 @@ class Aiotaskq:
     task_map: dict[str, Task] = {}
 
     def __init__(
-        self, 
-        import_path: t.Optional[str] = None, 
+        self,
+        import_path: t.Optional[str] = None,
         tasks: t.Optional[list[Task]] = None,
         include: t.Optional[list[str]] = None,
     ):
         self.import_path = (
-            import_path 
-            if import_path is not None 
+            import_path
+            if import_path is not None
             else inspect.getmodule(self).__name__  # type: ignore
         )
         self.task_map = {task_.__name__: task_ for task_ in tasks} if tasks else {}
@@ -74,17 +78,15 @@ class Aiotaskq:
                 # Import path points to an Aiotaskq instance -- use it.
                 print("\n1")
                 app = app_or_module
-            elif (
-                hasattr(app_or_module, "app") 
-                and isinstance(getattr(app_or_module, "app"), Aiotaskq)
+            elif hasattr(app_or_module, "app") and isinstance(
+                getattr(app_or_module, "app"), Aiotaskq
             ):
                 # Import path points to a module that contains an Aiotaskq instance
                 # named as `app` -- retrieve the instance and use it.
                 print("\n2")
                 app = getattr(app_or_module, "app")
-            elif (
-                hasattr(app_or_module, "aiotaskq")
-                and isinstance(getattr(app_or_module, "aiotaskq"), Aiotaskq)
+            elif hasattr(app_or_module, "aiotaskq") and isinstance(
+                getattr(app_or_module, "aiotaskq"), Aiotaskq
             ):
                 # Import path points to a module that contains an Aiotaskq instance
                 # named as `aiotaskq` -- retrieve the instance and use it.

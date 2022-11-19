@@ -2,7 +2,6 @@ from types import ModuleType
 
 import pytest
 
-import aiotaskq
 from aiotaskq.task import Task
 from aiotaskq.app import Aiotaskq
 
@@ -20,19 +19,19 @@ from sample_apps.simple_app.aiotaskq import app as simple_app
         #     simple_app,
         # ),
         (
-            # Case 2.1: Tasks are defined using an explicit Aiotaskq instance, and 
+            # Case 2.1: Tasks are defined using an explicit Aiotaskq instance, and
             "sample_apps.simple_app.aiotaskq:app",
             # We should instantiate Aiotaskq from the import path to the instance.
             simple_app,
         ),
         (
-            # Case 2.2: Tasks are defined using an explicit Aiotaskq instance, and 
+            # Case 2.2: Tasks are defined using an explicit Aiotaskq instance, and
             "sample_apps.simple_app.aiotaskq",
             # We should instantiate Aiotaskq from the import path to the instance.
             simple_app,
         ),
         (
-            # Case 2.3: Tasks are defined using an explicit Aiotaskq instance, and 
+            # Case 2.3: Tasks are defined using an explicit Aiotaskq instance, and
             "sample_apps.simple_app",
             # We should instantiate Aiotaskq from the import path to the instance.
             simple_app,
