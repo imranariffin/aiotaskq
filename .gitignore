@@ -122,6 +122,7 @@ venv.bak/
 
 # Sample Apps
 
+src/sample_apps/.venv/
 src/sample_apps/pyproject.toml
 src/sample_apps/.Python
 src/sample_apps/build/
