@@ -12,19 +12,31 @@ from sample_apps.simple_app.aiotaskq import app as simple_app
 @pytest.mark.parametrize(
     "valid_import_path,app_expected",
     [
+        # (
+        #     # Case 1: Tasks are defined inside a module without using explicit Aiotaskq
+        #     # instance, and
+        #     "sample_apps.simple_app.aiotaskq",
+        #     # We should instantiate Aiotaskq using the module path.
+        #     simple_app,
+        # ),
         (
-            # Case 1: Tasks are defined inside a module without using explicit Aiotaskq
-            # instance, and
-            "sample_apps.simple_app.aiotaskq",
-            # We should instantiate Aiotaskq using the module path.
+            # Case 2.1: Tasks are defined using an explicit Aiotaskq instance, and 
+            "sample_apps.simple_app.aiotaskq:app",
+            # We should instantiate Aiotaskq from the import path to the instance.
             simple_app,
         ),
-        # (
-        #     # Case 2: Tasks are defined using an explicit Aiotaskq instance, and 
-        #     "aiotaskq.tests.apps.simple_app_encapsulated",
-        #     # We should instantiate Aiotaskq from the import path to the instance.
-        #     aiotaskq.tests.apps.simple_app_encapsulated.aiotaskq.app,
-        # ),
+        (
+            # Case 2.2: Tasks are defined using an explicit Aiotaskq instance, and 
+            "sample_apps.simple_app.aiotaskq",
+            # We should instantiate Aiotaskq from the import path to the instance.
+            simple_app,
+        ),
+        (
+            # Case 2.3: Tasks are defined using an explicit Aiotaskq instance, and 
+            "sample_apps.simple_app",
+            # We should instantiate Aiotaskq from the import path to the instance.
+            simple_app,
+        ),
         # (
         #     # Case 3: Tasks are defined using an explicit Aiotaskq instance in a default
         #     # file name ("aiotaskq.py"), and
