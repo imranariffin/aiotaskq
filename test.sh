@@ -1,12 +1,12 @@
-# echo "Upgrade pip"
-# pip install --quiet --upgrade pip
+echo "Upgrade pip"
+pip install --quiet --upgrade pip
 
-# echo "Install dependencies"
-# pip install -v --no-cache-dir -e .[dev]
+echo "Install dependencies"
+pip install -v --no-cache-dir -e .[dev]
 
 echo "Install sample apps"
-PROJECT_DIR=$PWD envsubst < ./sample_apps/pyproject.template.toml > ./sample_apps/pyproject.toml
-pip install --quiet --no-cache-dir -e file://$PWD/sample_apps/
+PROJECT_DIR=$PWD envsubst < ./src/sample_apps/pyproject.template.toml > ./src/sample_apps/pyproject.toml
+pip install --quiet --no-cache-dir -e file://$PWD/src/sample_apps/
 
 echo "Erase previous coverage files"
 coverage erase
