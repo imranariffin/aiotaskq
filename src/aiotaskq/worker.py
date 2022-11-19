@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 import asyncio
 from functools import cached_property
-import importlib
 import json
 import logging
 import multiprocessing
@@ -15,6 +14,7 @@ import typing as t
 from .app import Aiotaskq
 from .concurrency_manager import ConcurrencyManagerSingleton
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
+from .exceptions import AppImportError
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSubSingleton
 
@@ -233,10 +233,10 @@ class GruntWorker(BaseWorker):
 def validate_input(app_import_path: str) -> t.Optional[str]:
     """Validate all worker cli inputs and return an error string if any."""
     try:
-        importlib.import_module(app_import_path)
-    except ModuleNotFoundError:
+        Aiotaskq.from_import_path(app_or_module_path=app_import_path)
+    except AppImportError:
         return (
-            f"Error at argument `--app_import_path {app_import_path}`:"
+            f"Error at argument `APP`:"
             f' "{app_import_path}" is not a path to a valid Python module'
         )
 
