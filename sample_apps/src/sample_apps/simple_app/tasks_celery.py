@@ -4,7 +4,7 @@ import time
 from celery.canvas import chord, group
 import celery
 
-from simple_app.celery import app
+from .celery import app
 
 logger = logging.getLogger(__name__)
 

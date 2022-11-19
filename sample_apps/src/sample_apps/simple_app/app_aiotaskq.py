@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from simple_app.tasks_aiotaskq import add, times
+from .tasks_aiotaskq import add, times
 
 logger = logging.getLogger(__name__)
 

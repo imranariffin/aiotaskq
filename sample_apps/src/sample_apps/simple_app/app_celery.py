@@ -1,7 +1,7 @@
 import logging
 
 from celery.canvas import Signature, chord, group
-from simple_app.tasks_celery import add, times
+from .tasks_celery import add, times
 
 logger = logging.getLogger(__name__)
 

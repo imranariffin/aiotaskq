@@ -5,7 +5,8 @@ import pytest
 import aiotaskq
 from aiotaskq.task import Task
 from aiotaskq.app import Aiotaskq
-from simple_app.aiotaskq import app as simple_app
+
+from sample_apps.simple_app.aiotaskq import app as simple_app
 
 
 @pytest.mark.parametrize(
@@ -14,7 +15,7 @@ from simple_app.aiotaskq import app as simple_app
         (
             # Case 1: Tasks are defined inside a module without using explicit Aiotaskq
             # instance, and
-            "simple_app.aiotaskq",
+            "sample_apps.simple_app.aiotaskq",
             # We should instantiate Aiotaskq using the module path.
             simple_app,
         ),
