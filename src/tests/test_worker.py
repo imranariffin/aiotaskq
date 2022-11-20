@@ -56,8 +56,8 @@ def test_incorrect_app():
             # Then the worker process should print error message
             output = str(worker_cli_process_pipe.read())
             output_expected = (
-                "Error at argument `--app_import_path some.incorrect.app.name`: "
-                '"some.incorrect.app.name" is not a path to a valid Python module'
+                "Error at argument `APP`: "
+                "\"some.incorrect.app.name\" is not a path to a valid Python module"
             )
             assert output_expected in output
     # And exit immediately with an error exit code
@@ -73,8 +73,8 @@ def test_validate_input():
 
     # Then a descriptive error_message should be returned
     assert error_msg == (
-        "Error at argument `--app_import_path some.incorrect.app.name`:"
-        ' "some.incorrect.app.name" is not a path to a valid Python module'
+        "Error at argument `APP`: \"some.incorrect.app.name\""
+        " is not a path to a valid Python module"
     )
 
 
