@@ -13,8 +13,22 @@ from sample_apps.simple_app_implicit_instance import app_aiotaskq as simple_app_
     "valid_import_path,app_expected",
     [
         (
-            # Case 1.1: Tasks are defined using an explicit Aiotaskq instance, and
+            # Case 1.1.1: Tasks are defined using an explicit Aiotaskq instance with
+            # default name "app", and
             "sample_apps.simple_app.aiotaskq:app",
+            # We should instantiate Aiotaskq from the import path to the instance.
+            simple_app,
+        ),
+        (
+            # Case 1.1.2: Tasks are defined using an explicit Aiotaskq instance with
+            # default name "app", and
+            "sample_apps.simple_app.aiotaskq.app",
+            # We should instantiate Aiotaskq from the import path to the instance.
+            simple_app,
+        ),
+        (
+            # Case 1.1.3: Tasks are defined using an explicit Aiotaskq instance with custom name, and
+            "sample_apps.simple_app.aiotaskq:some_app",
             # We should instantiate Aiotaskq from the import path to the instance.
             simple_app,
         ),
