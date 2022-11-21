@@ -44,6 +44,10 @@ dev = [
 [project.scripts]
 aiotaskq = "aiotaskq.__main__:cli"
 
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["aiotaskq*"] 
+
 [tool.black]
 line-length = 100
 

@@ -9,7 +9,7 @@ from aiotaskq.interfaces import ConcurrencyType
 from aiotaskq.worker import validate_input
 
 if TYPE_CHECKING:  # pragma: no cover
-    from aiotaskq.tests.conftest import WorkerFixture
+    from tests.conftest import WorkerFixture
 
 
 @pytest.mark.asyncio
@@ -19,7 +19,7 @@ async def test_concurrency_starts_child_workers(worker: "WorkerFixture"):
     """
     # Given that the worker cli is run with "--concurrency 4" option
     concurrency = 4
-    await worker.start(app="aiotaskq.tests.apps.simple_app", concurrency=concurrency)
+    await worker.start(app="tests.apps.simple_app", concurrency=concurrency)
 
     # Then the number of child worker processes spawned should be the same as requested
     with os.popen(f"pgrep -P {worker.proc.pid} | wc -l") as child_process_counter:
@@ -38,7 +38,7 @@ async def test_concurrency_starts_child_workers_with_default_concurrency(
     cpu_count_on_machine = multiprocessing.cpu_count()
 
     # When the worker cli is run without "--concurrency" option
-    await worker.start(app="aiotaskq.tests.apps.simple_app")
+    await worker.start(app="tests.apps.simple_app")
 
     # Then the number of child worker processes spawned should be the same
     # as cpu core on machine
@@ -96,7 +96,7 @@ async def test_run_worker__incorrect_app_name(worker: "WorkerFixture"):
 async def test_handle_keyboard_interrupt(worker: "WorkerFixture"):
     # Given a running worker with some child processes
     concurrency = 4
-    await worker.start("aiotaskq.tests.apps.simple_app", concurrency=concurrency)
+    await worker.start("tests.apps.simple_app", concurrency=concurrency)
     bash_command = (
         f"pgrep -P {worker.proc.pid} "  # Get pids of all child processes of the worker
         "| wc -l"  # Count the number of pids
@@ -118,7 +118,7 @@ async def test_handle_keyboard_interrupt(worker: "WorkerFixture"):
 async def test_handle_termination_signal(worker: "WorkerFixture"):
     # Given a running worker with some child processes
     concurrency = 4
-    await worker.start("aiotaskq.tests.apps.simple_app", concurrency=concurrency)
+    await worker.start("tests.apps.simple_app", concurrency=concurrency)
     bash_command = (
         f"pgrep -P {worker.proc.pid} "  # Get pids of all child processes of the worker
         "| wc -l"  # Count the number of pids
