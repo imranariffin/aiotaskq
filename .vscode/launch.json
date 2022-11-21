@@ -15,7 +15,7 @@
             "name": "Sample App",
             "type": "python",
             "request": "launch",
-            "module": "aiotaskq.tests.apps.simple_app",
+            "module": "tests.apps.simple_app",
             "args": [],
             "console": "integratedTerminal"
         },
@@ -40,7 +40,7 @@
             "module": "aiotaskq",
             "args": [
                 "worker",
-                "aiotaskq.tests.apps.simple_app"
+                "tests.apps.simple_app"
             ],
             "console": "integratedTerminal",
         }
