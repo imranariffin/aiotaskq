@@ -54,29 +54,29 @@ from sample_apps.simple_app_implicit_instance import app_aiotaskq as simple_app_
         # (
         #     # Case 3: Tasks are defined using an explicit Aiotaskq instance in a default
         #     # file name ("aiotaskq.py"), and
-        #     "aiotaskq.tests.apps.simple_app_encapsulated.aiotaskq:app",
+        #     "tests.apps.simple_app_encapsulated.aiotaskq:app",
         #     # We should instantiate Aiotaskq from the import path to the instance
         #     # using the ":" pattern (this pattern is useful to differentiate between
         #     # a module and an object).
-        #     aiotaskq.tests.apps.simple_app_encapsulated.aiotaskq.app,
+        #     tests.apps.simple_app_encapsulated.aiotaskq.app,
         # ),
         # (
         #     # Case 4: Tasks are defined using an explicit Aiotaskq instance in
         #     # a non-default file name ("some_module_name.py"), and
-        #     "aiotaskq.tests.apps.simple_app_encapsulated_2.some_file_name:some_app",
+        #     "tests.apps.simple_app_encapsulated_2.some_file_name:some_app",
         #     # We should instantiate Aiotaskq from the import path to the instance
         #     # using the ":" pattern (this pattern is useful to differentiate between
         #     # a module and an object)".
-        #     aiotaskq.tests.apps.simple_app_encapsulated_2.some_file_name.some_app,
+        #     tests.apps.simple_app_encapsulated_2.some_file_name.some_app,
         # ),
         # (
         #     # Case 5: Tasks are defined using an explicit Aiotaskq instance in a non-default
         #     # file name ("some_module_name.py"), and
-        #     "aiotaskq.tests.apps.simple_app_encapsulated_2.some_file_name",
+        #     "tests.apps.simple_app_encapsulated_2.some_file_name",
         #     # We should instantiate Aiotaskq from the import path to the instance
         #     # using the ":" pattern (this pattern is useful to differentiate between
         #     # a module and an object)".
-        #     aiotaskq.tests.apps.simple_app_encapsulated_2.some_file_name.some_app,
+        #     tests.apps.simple_app_encapsulated_2.some_file_name.some_app,
         # ),
     ],
 )

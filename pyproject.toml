@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools >= 61.0.0",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
@@ -47,7 +47,11 @@ aiotaskq = "aiotaskq.__main__:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+<<<<<<< HEAD
 include = ["aiotaskq*"] 
+=======
+include = ["aiotaskq*"]
+>>>>>>> c95ef23... Move tests & sample_apps to src/ [Pass tests]
 
 [tool.black]
 line-length = 100

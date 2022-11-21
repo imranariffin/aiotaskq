@@ -35,7 +35,3 @@ from .task import task
 __version__ = importlib.metadata.version("aiotaskq")
 
 __all__ = ["__version__", "task", "Aiotaskq"]
-
-# # if os.environ["ENV"] == "test" or TYPE_CHECKING:
-# from . import tests
-# __all__ += ["tests"]
