@@ -1,9 +1,25 @@
 import asyncio
 import logging
 
-from .tasks_aiotaskq import add, times
+from aiotaskq.task import task
 
 logger = logging.getLogger(__name__)
+
+
+@task
+def add(ls: list[int]) -> int:
+    logger.info("add(%s) ...", ls)
+    ret = sum(x for x in ls)
+    logger.info("add(%s) -> %s", ls, ret)
+    return ret
+
+
+@task
+def times(x: int, y: int) -> int:
+    logger.info("times(%s, %s) ...", x, y)
+    ret = x * y
+    logger.info("times(%s, %s) -> %s", x, y, ret)
+    return ret
 
 
 async def get_formula():
@@ -12,8 +28,10 @@ async def get_formula():
     # TODO (Issue #44): Support chain of tasks
     """
     logger.info("get_formula() ...")
-    x = await times.apply_async(x=1, y=3)
-    y = await times.apply_async(x=3, y=4)
+    x, y = await asyncio.gather(
+        times.apply_async(x=1, y=3),
+        times.apply_async(x=3, y=4),
+    )
     ret = await add.apply_async([x, y])
     logger.info("get_formula() -> %s", str(ret))
     return ret

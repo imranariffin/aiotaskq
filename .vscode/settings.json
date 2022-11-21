@@ -1,7 +1,7 @@
 {
     "files.exclude": {
         "**/.git": true,
-        "**/.venv": true,
+        "**/.venv*": true,
         "**/.hg": true,
         "**/.DS_Store": true,
         "**/*.egg-info": true,
@@ -12,7 +12,7 @@
     "python.testing.unittestEnabled": false,
     "python.analysis.extraPaths": [
         "src/tests/",
-        "./src/sample_apps"
+        "./sample_apps/"
     ],
     "python.defaultInterpreterPath": "../.venv/bin/python3"
 }
