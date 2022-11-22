@@ -27,6 +27,7 @@ def main():
     ret = get_formula().apply_async().get()
     logger.info("Result: %s", ret)
     assert ret == 15
+    return ret
 
 
 if __name__ == "__main__":

@@ -1,12 +1,12 @@
 import pytest
 
 from aiotaskq.task import Task
-from tests.conftest import WorkerFixture
+from tests.conftest import WorkerFixtureAiotaskq
 from tests.apps import simple_app
 
 
 @pytest.mark.asyncio
-async def test_sync_and_async_parity__simple_app(worker: WorkerFixture):
+async def test_sync_and_async_parity__simple_app(worker: WorkerFixtureAiotaskq):
     # Given a simple app running as a worker
     app = simple_app
     await worker.start(app=app.__name__, concurrency=8)
