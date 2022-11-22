@@ -47,11 +47,7 @@ aiotaskq = "aiotaskq.__main__:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-<<<<<<< HEAD
-include = ["aiotaskq*"] 
-=======
 include = ["aiotaskq*"]
->>>>>>> c95ef23... Move tests & sample_apps to src/ [Pass tests]
 
 [tool.black]
 line-length = 100
