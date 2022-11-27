@@ -1,8 +1,4 @@
 import logging
-import time
-
-from celery.canvas import chord, group
-import celery
 
 from .celery import app
 

@@ -61,8 +61,8 @@ def test_valid_app_import_path(valid_import_path: str, app_expected: ModuleType)
 
     # Then the instantiated Aiotaskq object should be loaded with the tasks
     assert isinstance(app_actual.add, Task)
-    assert app_actual.add == app_actual.task_map["add"] == app_expected.add # type: ignore
+    assert app_actual.add == app_actual.task_map["add"] == app_expected.add  # type: ignore
     assert app_actual.add(ls=[2, 3]) == 5
     assert isinstance(app_actual.times, Task)
-    assert app_actual.times == app_actual.task_map["times"] == app_expected.times # type: ignore
+    assert app_actual.times == app_actual.task_map["times"] == app_expected.times  # type: ignore
     assert app_actual.times(x=2, y=3) == 6
