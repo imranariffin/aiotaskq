@@ -21,7 +21,6 @@ def apply_formula() -> Signature:
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
     logger.info("Simple App (Celery)")
     ret = apply_formula().apply_async().get()
     logger.info("Result: %s", ret)

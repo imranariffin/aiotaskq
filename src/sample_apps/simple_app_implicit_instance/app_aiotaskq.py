@@ -35,7 +35,6 @@ async def apply_formula():
 
 
 async def main():
-    logging.basicConfig(level=logging.DEBUG)
     logger.info("Simple App (Aiotaskq)")
     ret = await apply_formula()
     logger.info("Result: %s", ret)

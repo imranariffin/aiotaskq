@@ -28,22 +28,33 @@ Feel free to run this inside of a `aiotaskq` repository. Copy-pasting
 these commands to your terminal should work out of the box.
 
 ```bash
+# ./demo-sample-apps-simple-app.sh#L1-L35
+
 # If not already inside it, clone the aiotaskq repository and cd into it
 [[ $(basename $PWD) == "aiotaskq" ]] || (git clone git@github.com:imranariffin/aiotaskq.git && cd aiotaskq)
 
 # Let's say we want to run the first app (Simple App), which is located
-# in `./sample_apps/simple_app/`. Update this env var APP as you'd like
+# in `./src/sample_apps/simple_app/`. Update this env var APP as you'd like
 # to choose your desired sample app.
 APP=simple_app
 
 # Create a new virtual env specifically for the sample apps
-python -m venv ./sample_apps/.venv
-source ./sample_apps/.venv/bin/activate
+rm -rf ./src/sample_apps/.venv || echo ""
+python3.10 -m venv ./src/sample_apps/.venv
+source ./src/sample_apps/.venv/bin/activate
+echo "Using $(python --version)"
 
 # Install sample_apps package from local file
-pip install -e sample_apps
+python -m pip install --no-cache-dir --upgrade pip
+PROJECT_DIR=$PWD envsubst < ./src/sample_apps/pyproject.template.toml > ./src/sample_apps/pyproject.toml
+pip install --no-cache-dir file://$PWD/src/sample_apps
+
+# Start redis and wait for it to be ready
+docker-compose up -d redis
+python ./check_redis_ready.py
 
 # Run aiotaskq workers in background and wait for it be ready
+aiotaskq --version
 aiotaskq worker sample_apps.$APP --concurrency 4 &
 sleep 2
 
@@ -53,7 +64,7 @@ python -m sample_apps.$APP.app_aiotaskq
 # Confirm in the logs if the app is running correctly
 
 # Kill aiotaskq workers that were running in background
-ps | grep aiotaskq | cut -d ' ' -f 1 | xargs kill -TERM
+ps | grep aiotaskq | sed 's/^[ \t]*//;s/[ \t]*$//' | cut -d ' ' -f 1 | xargs kill -TERM
 ```
 
 ## Run a sample app with Celery
@@ -62,30 +73,39 @@ Now, if you want to run the sample app with `Celery` to see how `aiotaskq`
 compares to it, do the following:
 
 ```bash
+# ./demo-sample-apps-simple-app-celery.sh#L1-L33
+
 # If not already inside it, clone the aiotaskq repository and cd into it
 [[ $(basename $PWD) == "aiotaskq" ]] || (git clone git@github.com:imranariffin/aiotaskq.git && cd aiotaskq)
 
+# Create a new virtual env specifically for the sample apps
+python3.10 -m venv ./src/sample_apps/.venv
+source ./src/sample_apps/.venv/bin/activate
+echo "Using $(python --version)"
+
+# Start redis and wait for it to be ready
+docker-compose up --detach redis
+python ./check_redis_ready.py
+
 # Let's say we want to run the first app (Simple App), which is located
-# in `./sample_apps/simple_app/`. Update this env var APP as you'd like
+# in `./src/sample_apps/simple_app/`. Update this env var APP as you'd like
 # to choose your desired sample app.
 APP=simple_app
 
-# Create a new virtual env specifically for the sample apps
-python -m venv ./sample_apps/.venv
-source ./sample_apps/.venv/bin/activate
-
 # Install sample_apps package from local file
-pip install -e sample_apps
+python3 -m pip install --upgrade pip
+PROJECT_DIR=$PWD envsubst < ./src/sample_apps/pyproject.template.toml > ./src/sample_apps/pyproject.toml
+pip install -e ./src/sample_apps
 
 # Run Celery workers in background and wait for it to be ready
 celery -A sample_apps.$APP worker --concurrency 4 &
 sleep 2
 
 # Run the the sample app
-python -m sample_apps.$APP.app_celery
+python3.10 -m sample_apps.$APP.app_celery
 
 # Confirm in the logs if the app is running correctly
 
 # Kill celery workers that were running in background
-ps | grep celery | cut -d ' ' -f 1 | xargs kill -TERM
+ps | grep celery | sed 's/^[ \t]*//;s/[ \t]*$//' | cut -d ' ' -f 1 | xargs kill -TERM
 ```

@@ -17,5 +17,5 @@ version = "0.0.0"
 readme = "README.md"
 description = "A collection of sample apps to test aiotaskq against Celery"
 
-[tool.setuptools]
-packages = ["simple_app", "simple_app_implicit_instance"]
+[tool.setuptools.packages.find]
+include = ["sample_apps*"]

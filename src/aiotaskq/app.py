@@ -112,14 +112,6 @@ class Aiotaskq:
         app.import_path = app_or_module_path
         return app
 
-    def register_task(self, func: t.Callable[P, RT]) -> Task[P, RT]:
-        """
-        Register a function as a task so that it can be retrieved from an Aiotaskq app instance.
-        """
-        task_: Task[P, RT] = task(func)
-        self.task_map[func.__name__] = task_
-        return task_
-
     @classmethod
     def _extract_tasks(cls, app_or_module: "ModuleType") -> list[Task]:
         return [

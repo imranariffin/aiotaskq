@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 from .tasks_aiotaskq import add, times
 
@@ -20,7 +21,14 @@ async def apply_formula():
 
 
 async def main():
-    logging.basicConfig(level=logging.DEBUG)
+    log_level = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "FATAL": logging.FATAL,
+    }[os.environ["LOG_LEVEL"].upper()]
+    logging.basicConfig(level=log_level)
     logger.info("Simple App (Aiotaskq)")
     ret = await apply_formula()
     logger.info("Result: %s", ret)

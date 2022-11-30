@@ -18,7 +18,6 @@ from .exceptions import AppImportError
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSubSingleton
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
