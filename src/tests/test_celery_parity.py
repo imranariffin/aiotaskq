@@ -55,7 +55,7 @@ async def test_parity_with_celery__simple_app_implicit_instance(
 ):
     # Given a simple app that uses both Celery and aiotaskq in
     # the following file structure (Please check it out):
-    # > tree src/sample_apps/simple_app_implicit -I __pycache__
+    # > tree src/sample_apps/src/sample_apps/simple_app_implicit -I __pycache__
     # src/sample_apps/simple_app_implicit_instance
     # ├── app_aiotaskq.py
     # ├── app_celery.py

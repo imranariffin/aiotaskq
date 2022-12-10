@@ -18,4 +18,6 @@ readme = "README.md"
 description = "A collection of sample apps to test aiotaskq against Celery"
 
 [tool.setuptools.packages.find]
+where = ["src"]
 include = ["sample_apps*"]
+namespaces = false

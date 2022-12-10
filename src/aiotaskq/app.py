@@ -5,7 +5,7 @@ import inspect
 import typing as t
 
 from .exceptions import AppImportError
-from .task import task, Task, P, RT
+from .task import Task
 
 if t.TYPE_CHECKING:  # pragma: no cover
     from types import ModuleType

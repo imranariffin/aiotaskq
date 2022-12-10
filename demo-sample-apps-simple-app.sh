@@ -2,27 +2,22 @@
 [[ $(basename $PWD) == "aiotaskq" ]] || (git clone git@github.com:imranariffin/aiotaskq.git && cd aiotaskq)
 
 # Let's say we want to run the first app (Simple App), which is located
-# in `./src/sample_apps/simple_app/`. Update this env var APP as you'd like
+# in `./src/sample_apps/src/sample_apps/simple_app/`. Update this env var APP as you'd like
 # to choose your desired sample app.
 APP=simple_app
 
-# Create a new virtual env specifically for the sample apps
-rm -rf ./src/sample_apps/.venv || echo ""
-python3.10 -m venv ./src/sample_apps/.venv
-source ./src/sample_apps/.venv/bin/activate
-echo "Using $(python --version)"
+# Enter virtual env specifically for the sample apps
+source ./enter_env.sh ./src/sample_apps/.venv
 
 # Install sample_apps package from local file
-python -m pip install --no-cache-dir --upgrade pip
-PROJECT_DIR=$PWD envsubst < ./src/sample_apps/pyproject.template.toml > ./src/sample_apps/pyproject.toml
-pip install --no-cache-dir file://$PWD/src/sample_apps
+./install_dependencies.sh ./src/sample_apps/
 
 # Start redis and wait for it to be ready
 docker-compose up -d redis
 python ./check_redis_ready.py
 
 # Run aiotaskq workers in background and wait for it be ready
-aiotaskq --version
+export LOG_LEVEL=${LOG_LEVEL:-INFO}
 aiotaskq worker sample_apps.$APP --concurrency 4 &
 sleep 2
 

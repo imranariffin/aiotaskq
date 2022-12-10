@@ -47,7 +47,8 @@ aiotaskq = "aiotaskq.__main__:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["aiotaskq*"]
+include = ["aiotaskq"]
+namespaces = false
 
 [tool.black]
 line-length = 100

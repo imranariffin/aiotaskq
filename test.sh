@@ -1,12 +1,9 @@
-echo "Upgrade pip"
-python -m pip install --quiet --upgrade pip
-
-echo "Install dependencies"
-pip install --quiet -e .[dev]
-
-echo "Install sample apps"
-PROJECT_DIR=$PWD envsubst < ./src/sample_apps/pyproject.template.toml > ./src/sample_apps/pyproject.toml
-pip install --quiet -e file://$PWD/src/sample_apps/
+echo "Enter virtual environment for testing"
+source ./enter_env.sh ./src/tests/.venv
+source ./install_dependencies.sh ./src/tests/
+# source ./enter_env.sh .[dev]
+# source ./enter_env.sh ./src/sample_apps/.venv
+echo "Using $(pip --version)"
 
 echo "Erase previous coverage files"
 coverage erase
