@@ -1,5 +1,8 @@
 # If not already inside it, clone the aiotaskq repository and cd into it
-[[ $(basename $PWD) == "aiotaskq" ]] || (git clone git@github.com:imranariffin/aiotaskq.git && cd aiotaskq)
+if [ "$(basename $PWD)" != "aiotaskq" ]; then
+    git clone git@github.com:imranariffin/aiotaskq.git;
+    cd aiotaskq
+fi
 
 # Let's say we want to run the first app (Simple App), which is located
 # in `./src/sample_apps/src/sample_apps/simple_app/`. Update this env var APP as you'd like
