@@ -17,9 +17,9 @@ jobs:
       with:
         python-version: "3.10.x"
     - run: ./env_create.sh ./src/tests/.venv/
-    - run: ./env_create.sh ./src/sample_apps/.venv/
     - run: source ./env_activate.sh ./src/tests/.venv/
     - run: ./install_dependencies.sh ./src/tests/
     - run: python ./check_redis_ready.py
     - run: pip freeze
+    - run: ./env_create.sh ./src/sample_apps/.venv/
     - run: ./test.sh

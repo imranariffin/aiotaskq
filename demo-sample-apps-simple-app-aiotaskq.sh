@@ -20,6 +20,9 @@ docker-compose up -d redis
 python ./check_redis_ready.py
 
 # Run aiotaskq workers in background and wait for it be ready
+echo "DEBUG START"
+echo "Using $(python --version) from $(which python)"
+echo "DEBUG END"
 export LOG_LEVEL=${LOG_LEVEL:-INFO}
 aiotaskq worker sample_apps.$APP --concurrency 4 &
 sleep 2
