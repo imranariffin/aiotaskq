@@ -12,7 +12,7 @@
     "python.testing.unittestEnabled": false,
     "python.analysis.extraPaths": [
         "src/tests/",
-        "src/sample_apps"
+        "src/sample_apps/"
     ],
     "python.defaultInterpreterPath": "../.venv/bin/python3"
 }
