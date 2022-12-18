@@ -1,20 +1,20 @@
 if [ -z $1 ];
 then
-    ./env_create.sh
+    source ./env_create.sh || exit 1
     source ./env_activate.sh
     echo "Installing dependencies"
-    source ./install_dependencies.sh > /dev/null
+    source ./install_dependencies.sh .[dev] > /dev/null
     pylint -v --rcfile ./.pylintrc src/aiotaskq
     failed_1=$?
 
-    ./env_create.sh ./src/tests/.venv/
+    source ./env_create.sh ./src/tests/.venv/ || exit 1
     source ./env_activate.sh ./src/tests/.venv/
     echo "Installing dependencies"
     source ./install_dependencies.sh ./src/tests/ > /dev/null
     pylint -v --rcfile ./.pylintrc.tests src/tests/
     failed_2=$?
 
-    ./env_create.sh ./src/sample_apps/.venv/
+    source ./env_create.sh ./src/sample_apps/.venv/ || exit 1
     source ./env_activate.sh ./src/sample_apps/.venv/
     echo "Installing dependencies"
     source ./install_dependencies.sh ./src/sample_apps/ > /dev/null
