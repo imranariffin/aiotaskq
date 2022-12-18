@@ -13,6 +13,7 @@ elif [ "$package" = "./src/tests/" ]; then
     rm -rf src/tests/build/ src/tests/tests.egg-info/ \
         src/sample_apps/build/ src/sample_apps/sample_apps.egg-info/ \
         src/aiotaskq/build/ src/aiotaskq/aiotaskq.egg-info/
+    PROJECT_DIR=$PWD envsubst < ./src/sample_apps/pyproject.template.toml > ./src/sample_apps/pyproject.toml
     PROJECT_DIR=$PWD envsubst < ./src/tests/pyproject.template.toml > ./src/tests/pyproject.toml
 else
     echo Custom package $package detected.
