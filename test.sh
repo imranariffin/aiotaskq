@@ -1,8 +1,6 @@
 echo "Enter virtual environment for testing"
-source ./enter_env.sh ./src/tests/.venv
-source ./install_dependencies.sh ./src/tests/
+source ./env_activate.sh ./src/tests/.venv
 export LOG_LEVEL=${LOG_LEVEL:-INFO}
-echo "Using $(pip --version)"
 
 echo "Erase previous coverage files"
 coverage erase

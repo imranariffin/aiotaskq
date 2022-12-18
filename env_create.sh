@@ -7,11 +7,9 @@ if [ "$py_version" != "3.10" ]; then
     exit 1
 fi
 
-python3 -m venv .venv
-source .venv/bin/activate
+venv=${1:-.venv}
+python3 -m venv $venv
+source $venv/bin/activate
 
-pip install --upgrade pip --quiet
-pip install -e .[dev] --quiet
-
-python --version
-pip --version
+echo "Using $(python --version)"
+echo "Using $(pip --version)"
