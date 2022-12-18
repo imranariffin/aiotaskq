@@ -1,4 +1,5 @@
 import logging
+import os
 
 from celery.canvas import Signature, chord, group
 from .tasks_celery import add, times
@@ -21,6 +22,14 @@ def apply_formula() -> Signature:
 
 
 def main():
+    log_level = {
+        "DEBUG": logging.DEBUG,
+        "INFO": logging.INFO,
+        "WARNING": logging.WARNING,
+        "ERROR": logging.ERROR,
+        "FATAL": logging.FATAL,
+    }[os.environ["LOG_LEVEL"].upper()]
+    logging.basicConfig(level=log_level)
     logger.info("Simple App (Celery)")
     ret = apply_formula().apply_async().get()
     logger.info("Result: %s", ret)

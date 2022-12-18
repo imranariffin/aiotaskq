@@ -28,7 +28,7 @@ Feel free to run this inside of a `aiotaskq` repository. Copy-pasting
 these commands to your terminal should work out of the box.
 
 ```bash
-# ./demo-sample-apps-simple-app.sh#L1-L35
+# ./demo-sample-apps-simple-app-aiotaskq.sh#L1-L35
 
 # If not already inside it, clone the aiotaskq repository and cd into it
 [[ $(basename $PWD) == "aiotaskq" ]] || (git clone git@github.com:imranariffin/aiotaskq.git && cd aiotaskq)

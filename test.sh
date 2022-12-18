@@ -3,6 +3,7 @@ source ./enter_env.sh ./src/tests/.venv
 source ./install_dependencies.sh ./src/tests/
 # source ./enter_env.sh .[dev]
 # source ./enter_env.sh ./src/sample_apps/.venv
+export LOG_LEVEL=${LOG_LEVEL:-INFO}
 echo "Using $(pip --version)"
 
 echo "Erase previous coverage files"
