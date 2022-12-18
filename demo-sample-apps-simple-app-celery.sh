@@ -9,8 +9,9 @@ fi
 # to choose your desired sample app.
 APP=simple_app
 
-# Enter virtual env specifically for the sample apps
-source ./env_activate.sh ./src/sample_apps/.venv
+# Create and activate virtual env specifically for the sample apps
+source ./env_create.sh ./src/sample_apps/.venv/
+source ./env_activate.sh ./src/sample_apps/.venv/
 
 # Install sample_apps package from local file
 ./install_dependencies.sh ./src/sample_apps/
