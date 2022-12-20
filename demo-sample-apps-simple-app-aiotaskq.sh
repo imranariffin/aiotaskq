@@ -10,7 +10,7 @@ fi
 APP=simple_app
 
 # Create and activate virtual env specifically for the sample apps
-source ./env_create.sh ./src/sample_apps/.venv/
+./env_create.sh ./src/sample_apps/.venv/
 source ./env_activate.sh ./src/sample_apps/.venv/
 
 # Install sample_apps package from local file
@@ -29,10 +29,10 @@ export LOG_LEVEL=${LOG_LEVEL:-INFO}
 aiotaskq worker sample_apps.$APP --concurrency 4 &
 sleep 2
 
+# Prepare trap that kills celery workers that were running in background on script exit
+trap "ps | grep aiotaskq | sed 's/^[ \t]*//;s/[ \t]*$//' | cut -d ' ' -f 1 | xargs kill -TERM" EXIT
+
 # Run the the sample app
-python -m sample_apps.$APP.app_aiotaskq
+python -m sample_apps.$APP.app_aiotaskq || exit 1
 
 # Confirm in the logs if the app is running correctly
-
-# Kill aiotaskq workers that were running in background
-ps | grep aiotaskq | sed 's/^[ \t]*//;s/[ \t]*$//' | cut -d ' ' -f 1 | xargs kill -TERM

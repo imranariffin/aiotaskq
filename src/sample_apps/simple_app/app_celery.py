@@ -34,6 +34,7 @@ def main():
     ret = apply_formula().apply_async().get()
     logger.info("Result: %s", ret)
     assert ret == 15
+    assert False
     return ret
 
 

@@ -7,19 +7,25 @@ on:
     branches:
     - main
 jobs:
-  run_unit_tests:
+  tests:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - run: docker-compose -f ./docker-compose.yml up --detach redis
     - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
-    - run: ./env_create.sh ./src/tests/.venv/
-    - run: source ./env_activate.sh ./src/tests/.venv/
-    - run: ./install_dependencies.sh ./src/tests/
-    - run: python ./check_redis_ready.py
-    - run: pip freeze
-    - run: ./env_create.sh ./src/sample_apps/.venv/
+    - run: source test_prepare.sh
     - run: ./test.sh
+  
+  test_docs:
+    timeout-minutes: 3
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v3
+      with:
+        python-version: "3.10.x"
+    - run: ./demo-sample-apps-simple-app-aiotaskq.sh
+    - run: ./demo-sample-apps-simple-app-celery.sh
+    - run: ./check-docs.sh
