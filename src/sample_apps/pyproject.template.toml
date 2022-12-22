@@ -1,0 +1,22 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+requires-python = ">=3.9"
+dependencies = [
+    "aiotaskq @ file://${PROJECT_DIR}/",
+    "celery >= 5.2.0, < 5.3.0",
+    "pylint >= 2.14.5, < 2.15.0",
+    "redis >= 4.3.4, < 4.4.0",
+]
+name = "sample_apps"
+version = "0.0.0"
+readme = "README.md"
+description = "A collection of sample apps to test aiotaskq against Celery"
+
+[tool.setuptools.packages.find]
+where = ["."]

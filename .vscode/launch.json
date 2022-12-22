@@ -9,15 +9,26 @@
             "type": "python",
             "request": "launch",
             "program": "./src/aiotaskq/main.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": false
         },
         {
-            "name": "Sample App",
+            "name": "Sample App (aiotaskq)",
             "type": "python",
             "request": "launch",
-            "module": "tests.apps.simple_app",
+            "module": "sample_apps.simple_app.app_aiotaskq",
             "args": [],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Sample App (Celery)",
+            "type": "python",
+            "request": "launch",
+            "module": "sample_apps.simple_app.app_celery",
+            "args": [],
+            "console": "integratedTerminal",
+            "justMyCode": false
         },
         {
             "name": "Test",
@@ -34,15 +45,30 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Sample Worker (Simple App)",
+            "name": "Simple App Worker (aiotaskq)",
             "type": "python",
             "request": "launch",
             "module": "aiotaskq",
             "args": [
                 "worker",
-                "tests.apps.simple_app"
+                "sample_apps.simple_app.aiotaskq:app"
             ],
             "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Simple App Worker (Celery)",
+            "type": "python",
+            "request": "launch",
+            "module": "celery",
+            "args": [
+                "-A",
+                "sample_apps.simple_app.celery:app",
+                "worker",
+                "--loglevel=DEBUG",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

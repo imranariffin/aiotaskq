@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 import asyncio
 from functools import cached_property
-import importlib
 import json
 import logging
 import multiprocessing
@@ -11,14 +10,14 @@ import os
 import signal
 import sys
 import typing as t
-import types
 
+from .app import Aiotaskq
 from .concurrency_manager import ConcurrencyManagerSingleton
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
+from .exceptions import AppImportError
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSubSingleton
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -31,12 +30,12 @@ class BaseWorker(ABC):
     where you write your `while True: some_logic`.
     """
 
-    app: types.ModuleType
+    app: Aiotaskq
     pubsub: IPubSub
     concurrency_manager: IConcurrencyManager
 
     def __init__(self, app_import_path: str):
-        self.app = importlib.import_module(app_import_path)
+        self.app = Aiotaskq.from_import_path(app_or_module_path=app_import_path)
 
     def run_forever(self) -> None:
         """
@@ -118,6 +117,9 @@ class WorkerManager(BaseWorker):
         )
         self._poll_interval_s = poll_interval_s
         super().__init__(app_import_path=app_import_path)
+        self._logger.debug("Tasks list:")
+        for task in self.app.task_map.keys():
+            self._logger.debug("* %s", task)
 
     async def _pre_run(self):
         self._logger.info("Starting %s back workers", self.concurrency_manager.concurrency)
@@ -166,7 +168,7 @@ class WorkerManager(BaseWorker):
     def _start_grunt_workers(self):
         def _run_grunt_worker_forever():
             grunt_worker = GruntWorker(
-                app_import_path=self.app.__name__,
+                app_import_path=self.app.import_path,
                 poll_interval_s=self._poll_interval_s,
             )
             grunt_worker.run_forever()
@@ -230,10 +232,10 @@ class GruntWorker(BaseWorker):
 def validate_input(app_import_path: str) -> t.Optional[str]:
     """Validate all worker cli inputs and return an error string if any."""
     try:
-        importlib.import_module(app_import_path)
-    except ModuleNotFoundError:
+        Aiotaskq.from_import_path(app_or_module_path=app_import_path)
+    except AppImportError:
         return (
-            f"Error at argument `--app_import_path {app_import_path}`:"
+            f"Error at argument `APP`:"
             f' "{app_import_path}" is not a path to a valid Python module'
         )
 

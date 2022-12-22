@@ -69,6 +69,8 @@ python ./app.py
 # Output: sync_result == async_result == 165580141. Awesome!
 ```
 
+For sample apps that you can run right away, see [Sample Apps](/src/sample_apps/README.md)
+
 ## Advanced usage example
 Let's say we want to compose a workflow where we want to break up some of the tasks and run them in parallel:
 ```

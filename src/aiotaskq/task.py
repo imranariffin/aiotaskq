@@ -15,7 +15,6 @@ from .pubsub import PubSubSingleton
 RT = t.TypeVar("RT")
 P = t.ParamSpec("P")
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -73,6 +72,7 @@ class Task(t.Generic[P, RT]):
     ```
     """
 
+    __name__: str
     __qualname__: str
 
     def __init__(self, func: t.Callable[P, RT]) -> None:
@@ -142,6 +142,7 @@ def task(func: t.Callable[P, RT]) -> Task[P, RT]:
         ]
     )
     task_ = Task[P, RT](func)
+    task_.__name__ = func.__name__
     task_.__qualname__ = f"{module_path}.{func.__name__}"
     task_.__module__ = module_path
     return task_

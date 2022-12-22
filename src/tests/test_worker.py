@@ -9,11 +9,11 @@ from aiotaskq.interfaces import ConcurrencyType
 from aiotaskq.worker import validate_input
 
 if TYPE_CHECKING:  # pragma: no cover
-    from tests.conftest import WorkerFixture
+    from tests.conftest import WorkerFixtureAiotaskq
 
 
 @pytest.mark.asyncio
-async def test_concurrency_starts_child_workers(worker: "WorkerFixture"):
+async def test_concurrency_starts_child_workers(worker: "WorkerFixtureAiotaskq"):
     """
     Assert that when --concurrency N option is provided, N child processes will be spawn.
     """
@@ -29,7 +29,7 @@ async def test_concurrency_starts_child_workers(worker: "WorkerFixture"):
 
 @pytest.mark.asyncio
 async def test_concurrency_starts_child_workers_with_default_concurrency(
-    worker: "WorkerFixture",
+    worker: "WorkerFixtureAiotaskq",
 ):
     """
     Assert that when --concurrency is NOT provided, N child processes will be spawned, N=cpu cores.
@@ -56,7 +56,7 @@ def test_incorrect_app():
             # Then the worker process should print error message
             output = str(worker_cli_process_pipe.read())
             output_expected = (
-                "Error at argument `--app_import_path some.incorrect.app.name`: "
+                "Error at argument `APP`: "
                 '"some.incorrect.app.name" is not a path to a valid Python module'
             )
             assert output_expected in output
@@ -73,13 +73,13 @@ def test_validate_input():
 
     # Then a descriptive error_message should be returned
     assert error_msg == (
-        "Error at argument `--app_import_path some.incorrect.app.name`:"
-        ' "some.incorrect.app.name" is not a path to a valid Python module'
+        'Error at argument `APP`: "some.incorrect.app.name"'
+        " is not a path to a valid Python module"
     )
 
 
 @pytest.mark.asyncio
-async def test_run_worker__incorrect_app_name(worker: "WorkerFixture"):
+async def test_run_worker__incorrect_app_name(worker: "WorkerFixtureAiotaskq"):
     # Given a worker being started with an incorrect app path
     await worker.start(
         app="some.incorrect.app.name",
@@ -93,7 +93,7 @@ async def test_run_worker__incorrect_app_name(worker: "WorkerFixture"):
 
 
 @pytest.mark.asyncio
-async def test_handle_keyboard_interrupt(worker: "WorkerFixture"):
+async def test_handle_keyboard_interrupt(worker: "WorkerFixtureAiotaskq"):
     # Given a running worker with some child processes
     concurrency = 4
     await worker.start("tests.apps.simple_app", concurrency=concurrency)
@@ -115,7 +115,7 @@ async def test_handle_keyboard_interrupt(worker: "WorkerFixture"):
 
 
 @pytest.mark.asyncio
-async def test_handle_termination_signal(worker: "WorkerFixture"):
+async def test_handle_termination_signal(worker: "WorkerFixtureAiotaskq"):
     # Given a running worker with some child processes
     concurrency = 4
     await worker.start("tests.apps.simple_app", concurrency=concurrency)

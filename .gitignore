@@ -113,12 +113,25 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
+.venv*
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Sample Apps
+
+src/*/.venv/
+src/*/pyproject.toml
+src/*/.Python
+src/*/build/
+src/*/develop-eggs/
+src/*/dist/
+src/*/eggs/
+src/*/.eggs/
+src/*/*.egg-info/
+src/*/*.egg
 
 # Spyder project settings
 .spyderproject
@@ -152,3 +165,6 @@ cython_debug/
 #.idea/
 
 codecov
+
+# NPM Scripts
+node_modules/

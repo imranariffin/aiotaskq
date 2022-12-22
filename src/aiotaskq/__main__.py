@@ -2,6 +2,8 @@
 
 #!/usr/bin/env python
 
+import logging
+import os
 import typing as t
 
 import typer
@@ -11,6 +13,9 @@ from .worker import Defaults, run_worker_forever
 from . import __version__
 
 cli = typer.Typer()
+
+log_level = os.environ.get("LOG_LEVEL", "INFO")
+logging.basicConfig(level=log_level)
 
 
 def _version_callback(value: bool):
