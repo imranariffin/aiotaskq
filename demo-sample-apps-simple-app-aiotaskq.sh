@@ -26,7 +26,7 @@ echo "Using $(python --version) from $(which python)"
 pip freeze
 echo "DEBUG END"
 export LOG_LEVEL=${LOG_LEVEL:-INFO}
-aiotaskq worker sample_apps.$APP --concurrency 4 &
+aiotaskq worker sample_apps.$APP.aiotaskq --concurrency 4 &
 sleep 2
 
 # Prepare trap that kills celery workers that were running in background on script exit
