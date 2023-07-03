@@ -74,6 +74,7 @@ def test_worker_show_proper_help_message():
             "  --poll-interval-s FLOAT         [default: 0.01]\n"
             "  --concurrency-type [multiprocessing]\n"
             "                                  [default: multiprocessing]\n"
+            "  --worker-rate-limit INTEGER     [default: -1]\n"
             "  --help                          Show this message and exit.\n"
         )
         assert output == output_expected

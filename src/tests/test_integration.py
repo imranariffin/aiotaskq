@@ -1,3 +1,4 @@
+import inspect
 import pytest
 
 from aiotaskq.task import Task
@@ -12,12 +13,17 @@ async def test_sync_and_async_parity__simple_app(worker: WorkerFixture):
     await worker.start(app=app.__name__, concurrency=8)
     # Then there should be parity between sync and async call of the tasks
     tests: list[tuple[Task, tuple, dict]] = [
+        (simple_app.wait, tuple() ,{"t_s": 1}),
+        (simple_app.echo, (42,), {}),
         (simple_app.add, tuple(), {"x": 41, "y": 1}),
         (simple_app.power, (2,), {"b": 64}),
         (simple_app.join, ([2021, 2, 20],), {}),
         (simple_app.some_task, (21,), {}),
     ]
     for task, args, kwargs in tests:
-        sync_result = task(*args, **kwargs)
+        if inspect.iscoroutinefunction(task.func):
+            sync_result = await task(*args, **kwargs)
+        else:
+            sync_result = task(*args, **kwargs)
         async_result = await task.apply_async(*args, **kwargs)
         assert async_result == sync_result, f"{async_result} != {sync_result}"

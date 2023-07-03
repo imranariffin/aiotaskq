@@ -74,17 +74,17 @@ class Task(t.Generic[P, RT]):
     """
 
     __qualname__: str
+    func: t.Callable[P, RT]
 
     def __init__(self, func: t.Callable[P, RT]) -> None:
         """
         Store the underlying function and an automatically generated task_id in the Task instance.
         """
-        self._f = func
-        self._id = uuid.uuid4()
+        self.func = func
 
     def __call__(self, *args, **kwargs) -> RT:
         """Call the task synchronously, by directly executing the underlying function."""
-        return self._f(*args, **kwargs)
+        return self.func(*args, **kwargs)
 
     def generate_task_id(self) -> str:
         """Generate a unique id for an individual call to a task."""
