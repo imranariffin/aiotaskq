@@ -1,3 +1,5 @@
+import asyncio
+
 import aiotaskq
 
 
@@ -7,13 +9,20 @@ def echo(x):
 
 
 @aiotaskq.task
+async def wait(t_s: int) -> int:
+    """Wait asynchronously for `t_s` seconds."""
+    await asyncio.sleep(t_s)
+    return t_s
+
+
+@aiotaskq.task
 def add(x: int, y: int) -> int:
     return x + y
 
 
 @aiotaskq.task
 def power(a: int, b: int = 1) -> int:
-    return a ** b
+    return a**b
 
 
 @aiotaskq.task
@@ -36,7 +45,14 @@ if __name__ == "__main__":  # pragma: no cover
     from asyncio import get_event_loop
 
     async def main():
-        ret = await join.apply_async(["Hello", "World"], delimiter=" ")
+        # ret = await join.apply_async(["Hello", "World"], delimiter=" ")
+        ret = await asyncio.gather(
+            *[
+                wait.apply_async(1),
+                wait.apply_async(1),
+                wait.apply_async(1),
+            ],
+        )
         print(ret)
 
     loop = get_event_loop()

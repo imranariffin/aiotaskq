@@ -16,15 +16,17 @@ class WorkerFixture:
     async def start(
         self,
         app: str,
-        concurrency: t.Optional[int] = Defaults.concurrency,
-        concurrency_type: t.Optional[ConcurrencyType] = Defaults.concurrency_type,
-        poll_interval_s: t.Optional[float] = Defaults.poll_interval_s,
+        concurrency: t.Optional[int] = Defaults.concurrency(),
+        concurrency_type: t.Optional[ConcurrencyType] = Defaults.concurrency_type(),
+        worker_rate_limit: int = Defaults.worker_rate_limit(),
+        poll_interval_s: t.Optional[float] = Defaults.poll_interval_s(),
     ) -> None:
         proc = multiprocessing.Process(
             target=lambda: run_worker_forever(
                 app_import_path=app,
                 concurrency=concurrency,
                 concurrency_type=concurrency_type,
+                worker_rate_limit=worker_rate_limit,
                 poll_interval_s=poll_interval_s,
             )
         )
@@ -54,7 +56,8 @@ class WorkerFixture:
 
     def close(self) -> None:
         """Release all resources belonging to the worker process."""
-        self.proc.close()
+        if not self.proc.is_alive():
+            self.proc.close()
 
 
 @pytest.fixture

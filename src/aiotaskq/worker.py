@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from functools import cached_property
 import importlib
+import inspect
 import json
 import logging
 import multiprocessing
@@ -17,6 +18,9 @@ from .concurrency_manager import ConcurrencyManagerSingleton
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSub
+
+if t.TYPE_CHECKING:
+    from .task import Task
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -76,19 +80,21 @@ class Defaults:
     """Store default constants for the aiotaskq.worker module."""
 
     @classmethod
-    @property
     def concurrency(cls) -> int:
         """Return the number of worker process to spawn."""
         return multiprocessing.cpu_count()
 
     @classmethod
-    @property
     def concurrency_type(cls) -> str:
         """Return the default concurrency type ("multiprocessing")."""
         return ConcurrencyType.MULTIPROCESSING.value
 
     @classmethod
-    @property
+    def worker_rate_limit(cls) -> int:
+        """Default to no worker rate limit."""
+        return -1
+
+    @classmethod
     def poll_interval_s(cls) -> float:
         """Return the time in seconds to poll for next task."""
         return 0.01
@@ -109,6 +115,7 @@ class WorkerManager(BaseWorker):
         app_import_path: str,
         concurrency: int,
         concurrency_type: ConcurrencyType,
+        worker_rate_limit: int,
         poll_interval_s: float,
     ) -> None:
         self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
@@ -116,6 +123,7 @@ class WorkerManager(BaseWorker):
             concurrency_type=concurrency_type,
             concurrency=concurrency,
         )
+        self._worker_rate_limit = worker_rate_limit
         self._poll_interval_s = poll_interval_s
         super().__init__(app_import_path=app_import_path)
 
@@ -168,6 +176,7 @@ class WorkerManager(BaseWorker):
             grunt_worker = GruntWorker(
                 app_import_path=self.app.__name__,
                 poll_interval_s=self._poll_interval_s,
+                worker_rate_limit=self._worker_rate_limit,
             )
             grunt_worker.run_forever()
 
@@ -182,8 +191,9 @@ class GruntWorker(BaseWorker):
     will be published to the user via IPubSub.
     """
 
-    def __init__(self, app_import_path: str, poll_interval_s: float):
+    def __init__(self, app_import_path: str, poll_interval_s: float, worker_rate_limit: int):
         self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        self._worker_rate_limit = worker_rate_limit
         super().__init__(app_import_path=app_import_path)
 
     async def _pre_run(self):
@@ -192,10 +202,19 @@ class GruntWorker(BaseWorker):
     async def _main_loop(self):
         self._logger.debug("Started main loop")
         channel: str = self._get_child_worker_tasks_channel(pid=self._pid)
+        batch_size = self._worker_rate_limit if self._worker_rate_limit != -1 else 99
+
+        # We only need to rate-limit the incoming tasks with batch size if batch_size is provided
+        if batch_size != Defaults.worker_rate_limit():
+            semaphore = asyncio.Semaphore(batch_size)
 
         async with self.pubsub as pubsub:  # pylint: disable=not-async-context-manager
             await pubsub.subscribe(channel=channel)
             while True:
+
+                if semaphore is not None:
+                    await semaphore.acquire()
+
                 self._logger.debug(
                     "[%s] Polling for a new task from manager until it's available [channel=%s]",
                     *(self._pid, channel),
@@ -212,19 +231,48 @@ class GruntWorker(BaseWorker):
                 task_kwargs = task_info["kwargs"]
                 task_id: str = task_info["task_id"]
                 task_func_name: str = task_id.split(":")[0].split(".")[-1]
-                task_func = getattr(self.app, task_func_name)
+                task: "Task" = getattr(self.app, task_func_name)
 
-                # Execute the task
-                self._logger.debug(
-                    "[%s] Executing task %s(*%s, **%s)",
-                    *(self._pid, task_id, task_args, task_kwargs),
+                # Fire and forget: execute the task and publish result
+                task_asyncio: "asyncio.Task" = self._execute_task_and_publish(
+                    pubsub=pubsub,
+                    task=task,
+                    task_args=task_args,
+                    task_kwargs=task_kwargs,
+                    task_id=task_id,
+                    semaphore=semaphore,
                 )
-                task_result = task_func(*task_args, **task_kwargs)
+                asyncio.create_task(task_asyncio)
 
-                # Publish the task return value
-                task_result = json.dumps(task_result)
-                result_channel = RESULTS_CHANNEL_TEMPLATE.format(task_id=task_id)
-                await pubsub.publish(channel=result_channel, message=task_result)
+    async def _execute_task_and_publish(
+        self,
+        pubsub: IPubSub,
+        task: "Task",
+        task_args: list,
+        task_kwargs: dict,
+        task_id: str,
+        semaphore: t.Optional["asyncio.Semaphore"],
+    ):
+        self._logger.debug(
+            "[%s] Executing task %s(*%s, **%s)",
+            *(self._pid, task_id, task_args, task_kwargs),
+        )
+        if inspect.iscoroutinefunction(task.func):
+            task_result = await task(*task_args, **task_kwargs)
+        else:
+            task_result = task(*task_args, **task_kwargs)
+
+        # Publish the task return value
+        self._logger.debug(
+            "[%s] Publishing task result %s(*%s, **%s)",
+            *(self._pid, task_id, task_args, task_kwargs),
+        )
+        task_result = json.dumps(task_result)
+        result_channel = RESULTS_CHANNEL_TEMPLATE.format(task_id=task_id)
+        await pubsub.publish(channel=result_channel, message=task_result)
+
+        if semaphore is not None:
+            semaphore.release()
 
 
 def validate_input(app_import_path: str) -> t.Optional[str]:
@@ -244,6 +292,7 @@ def run_worker_forever(
     app_import_path: str,
     concurrency: int,
     concurrency_type: ConcurrencyType,
+    worker_rate_limit: int,
     poll_interval_s: float,
 ) -> None:
     """Run the worker manager in a forever loop, and let it spawn and manage the workers."""
@@ -257,6 +306,7 @@ def run_worker_forever(
             app_import_path=app_import_path,
             concurrency=concurrency,
             concurrency_type=concurrency_type,
+            worker_rate_limit=worker_rate_limit,
             poll_interval_s=poll_interval_s,
         )
         worker_manager.run_forever()

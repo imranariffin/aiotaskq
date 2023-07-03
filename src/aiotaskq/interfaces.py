@@ -93,6 +93,7 @@ class IPubSub(t.Protocol):
             print(f"Got message: {message}")
     ```
     """
+
     def __init__(self, url: str, poll_interval_s: float, *args, **kwargs):
         """Initialize the pubsub class."""
 
