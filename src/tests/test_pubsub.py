@@ -1,5 +1,5 @@
 from aiotaskq.exceptions import UrlNotSupported
-from aiotaskq.pubsub import PubSubSingleton
+from aiotaskq.pubsub import PubSub
 
 
 def test_invalid_url():
@@ -9,8 +9,7 @@ def test_invalid_url():
     # When getting a pubsub instance using the url
     error = None
     try:
-        PubSubSingleton.reset()
-        PubSubSingleton.get(url=unsupported_pubsub_url, poll_interval_s=1.0)
+        PubSub.get(url=unsupported_pubsub_url, poll_interval_s=1.0)
     except UrlNotSupported as err:
         error = err
     finally:

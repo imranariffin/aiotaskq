@@ -16,7 +16,7 @@ import types
 from .concurrency_manager import ConcurrencyManagerSingleton
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
-from .pubsub import PubSubSingleton
+from .pubsub import PubSub
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ class WorkerManager(BaseWorker):
         concurrency_type: ConcurrencyType,
         poll_interval_s: float,
     ) -> None:
-        self.pubsub: IPubSub = PubSubSingleton.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
         self.concurrency_manager: IConcurrencyManager = ConcurrencyManagerSingleton.get(
             concurrency_type=concurrency_type,
             concurrency=concurrency,
@@ -183,7 +183,7 @@ class GruntWorker(BaseWorker):
     """
 
     def __init__(self, app_import_path: str, poll_interval_s: float):
-        self.pubsub: IPubSub = PubSubSingleton.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
         super().__init__(app_import_path=app_import_path)
 
     async def _pre_run(self):
