@@ -9,7 +9,7 @@ from .exceptions import UrlNotSupported
 from .interfaces import IPubSub, Message, PollResponse
 
 
-class PubSubSingleton:
+class PubSub:
     """The user-facing facade for creating the right pubsub implementation based on url."""
 
     _instance: t.Optional[IPubSub] = None
@@ -21,18 +21,10 @@ class PubSubSingleton:
 
         Currently supports only Redis (url="redis*").
         """
-        if cls._instance:
-            return cls._instance
-
         if url.startswith("redis"):
             cls._instance = PubSubRedis(url=url, poll_interval_s=poll_interval_s, **kwargs)
             return cls._instance
         raise UrlNotSupported(f'Url "{url}" is currently not supported.')
-
-    @classmethod
-    def reset(cls):
-        """Reset the singleton."""
-        cls._instance = None
 
 
 class PubSubRedis:

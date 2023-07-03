@@ -2,6 +2,11 @@ import aiotaskq
 
 
 @aiotaskq.task
+def echo(x):
+    return x
+
+
+@aiotaskq.task
 def add(x: int, y: int) -> int:
     return x + y
 

@@ -10,7 +10,7 @@ import uuid
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
 from .exceptions import ModuleInvalidForTask
 from .interfaces import IPubSub, PollResponse
-from .pubsub import PubSubSingleton
+from .pubsub import PubSub
 
 RT = t.TypeVar("RT")
 P = t.ParamSpec("P")
@@ -34,7 +34,7 @@ class AsyncResult(t.Generic[RT]):
     def __init__(self, task_id: str) -> None:
         """Store task_id in AsyncResult instance."""
         self._task_id = task_id
-        self.pubsub = PubSubSingleton.get(url=REDIS_URL, poll_interval_s=0.01)
+        self.pubsub = PubSub.get(url=REDIS_URL, poll_interval_s=0.01)
 
     async def get(self) -> RT:
         """Return the result of the task once finished."""
@@ -86,9 +86,10 @@ class Task(t.Generic[P, RT]):
         """Call the task synchronously, by directly executing the underlying function."""
         return self._f(*args, **kwargs)
 
-    def get_task_id(self) -> str:
-        """Return the task id."""
-        return f"{self.__qualname__}:{self._id}"
+    def generate_task_id(self) -> str:
+        """Generate a unique id for an individual call to a task."""
+        id_ = uuid.uuid4()
+        return f"{self.__qualname__}:{id_}"
 
     async def apply_async(self, *args: P.args, **kwargs: P.kwargs) -> RT:
         """
@@ -103,7 +104,7 @@ class Task(t.Generic[P, RT]):
         5. The worker process will publish the result of the task to Results Channel
         6. The main process (the caller) will pick up the result and return the result. DONE
         """
-        task_id: str = self.get_task_id()
+        task_id: str = self.generate_task_id()
         message: str = json.dumps(
             {
                 "task_id": task_id,
@@ -111,7 +112,7 @@ class Task(t.Generic[P, RT]):
                 "kwargs": kwargs,
             }
         )
-        pubsub_ = PubSubSingleton.get(
+        pubsub_ = PubSub.get(
             url=REDIS_URL, poll_interval_s=0.01, max_connections=10, decode_responses=True
         )
         async with pubsub_ as pubsub:  # pylint: disable=not-async-context-manager
