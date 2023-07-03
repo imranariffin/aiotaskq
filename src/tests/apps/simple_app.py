@@ -45,14 +45,7 @@ if __name__ == "__main__":  # pragma: no cover
     from asyncio import get_event_loop
 
     async def main():
-        # ret = await join.apply_async(["Hello", "World"], delimiter=" ")
-        ret = await asyncio.gather(
-            *[
-                wait.apply_async(1),
-                wait.apply_async(1),
-                wait.apply_async(1),
-            ],
-        )
+        ret = await join.apply_async(["Hello", "World"], delimiter=" ")
         print(ret)
 
     loop = get_event_loop()
