@@ -15,3 +15,7 @@ class UrlNotSupported(Exception):
 
 class ConcurrencyTypeNotSupported(Exception):
     """This concurrency type is currently not supported."""
+
+
+class InvalidArgument(Exception):
+    """A task is applied with invalid arguments."""

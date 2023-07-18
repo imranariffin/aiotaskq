@@ -151,13 +151,13 @@ class WorkerManager(BaseWorker):
         self.concurrency_manager.terminate()
 
     async def _main_loop(self):
-        self._logger.info("Started main loop")
+        self._logger.info("[%s] Started main loop", self._pid)
 
         async with self.pubsub as pubsub:  # pylint: disable=not-async-context-manager
             counter = -1
             await pubsub.subscribe(TASKS_CHANNEL)
             while True:
-                self._logger.debug("Polling for a new task until it's available")
+                self._logger.debug("[%s] Polling for a new task until it's available", self._pid)
                 message = await pubsub.poll()
 
                 # A new task is now available
@@ -200,7 +200,7 @@ class GruntWorker(BaseWorker):
         pass
 
     async def _main_loop(self):
-        self._logger.debug("Started main loop")
+        self._logger.debug("[%s] Started main loop", self._pid)
         channel: str = self._get_child_worker_tasks_channel(pid=self._pid)
         batch_size = self._worker_rate_limit if self._worker_rate_limit != -1 else 99
 
