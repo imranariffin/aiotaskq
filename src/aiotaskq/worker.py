@@ -19,7 +19,7 @@ from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSub
 
-if t.TYPE_CHECKING:
+if t.TYPE_CHECKING:  # pragma: no cover
     from .task import Task
 
 logging.basicConfig(level=logging.INFO)

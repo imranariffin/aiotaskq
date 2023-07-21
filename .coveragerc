@@ -2,3 +2,4 @@
 source = src/
 parallel = True
 concurrency = multiprocessing
+sigterm = True
