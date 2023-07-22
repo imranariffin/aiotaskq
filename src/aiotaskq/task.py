@@ -8,7 +8,7 @@ import typing as t
 import uuid
 
 from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
-from .exceptions import ModuleInvalidForTask
+from .exceptions import InvalidArgument, ModuleInvalidForTask
 from .interfaces import IPubSub, PollResponse
 from .pubsub import PubSub
 
@@ -104,6 +104,9 @@ class Task(t.Generic[P, RT]):
         5. The worker process will publish the result of the task to Results Channel
         6. The main process (the caller) will pick up the result and return the result. DONE
         """
+        # Raise error if arguments provided are invalid, before enything
+        self._validate_arguments(task_args=args, task_kwargs=kwargs)
+
         task_id: str = self.generate_task_id()
         message: str = json.dumps(
             {
@@ -124,6 +127,15 @@ class Task(t.Generic[P, RT]):
             result: RT = await async_result.get()
 
         return result
+
+    def _validate_arguments(self, task_args: tuple, task_kwargs: dict):
+        try:
+            func_sig: "inspect.Signature" = inspect.signature(self.func)
+            func_sig.bind(*task_args, **task_kwargs)
+        except TypeError as exc:
+            raise InvalidArgument(
+                f"These arguments are invalid: args={task_args}, kwargs={task_kwargs}"
+            ) from exc
 
 
 def task(func: t.Callable[P, RT]) -> Task[P, RT]:
