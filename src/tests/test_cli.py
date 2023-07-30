@@ -8,6 +8,7 @@ import typer
 
 from aiotaskq import __version__
 from aiotaskq.__main__ import _version_callback
+from aiotaskq.worker import Defaults
 
 
 def test_root_show_proper_help_message():
@@ -59,6 +60,8 @@ def test_version():
 
 def test_worker_show_proper_help_message():
     bash_command = "aiotaskq worker --help"
+    default_cpu_count: int = multiprocessing.cpu_count()
+    default_poll_interval_s: float = Defaults.poll_interval_s()
     with os.popen(bash_command) as pipe:
         output = pipe.read()
         output_expected = (
@@ -70,8 +73,8 @@ def test_worker_show_proper_help_message():
             "  APP  [required]\n"
             "\n"
             "Options:\n"
-            f"  --concurrency INTEGER           [default: {multiprocessing.cpu_count()}]\n"
-            "  --poll-interval-s FLOAT         [default: 0.01]\n"
+            f"  --concurrency INTEGER           [default: {default_cpu_count}]\n"
+            f"  --poll-interval-s FLOAT         [default: {default_poll_interval_s}]\n"
             "  --concurrency-type [multiprocessing]\n"
             "                                  [default: multiprocessing]\n"
             "  --worker-rate-limit INTEGER     [default: -1]\n"

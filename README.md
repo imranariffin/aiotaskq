@@ -34,7 +34,7 @@ import asyncio
 import aiotaskq
 
 
-@aiotaskq.task
+@aiotaskq.task()
 def some_task(b: int) -> int:
     # Some task with high cpu usage
     def _naive_fib(n: int) -> int:
@@ -132,22 +132,22 @@ import asyncio
 from aiotaskq import task
 
 
-@task
+@task()
 def task_1(*args, **kwargs):
         pass
 
 
-@task
+@task()
 def task_2(*args, **kwargs):
         pass
 
 
-@task
+@task()
 def task_3(*args, **kwargs):
         pass
 
 
-@task
+@task()
 def task_4(*args, **kwargs):
         pass
 

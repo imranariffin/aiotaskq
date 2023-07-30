@@ -137,3 +137,61 @@ class IWorkerManager(IWorker):
     """
 
     concurrency_manager: IConcurrencyManager
+
+
+class SerializationType(str, enum.Enum):
+    """Specify the types of serialization supported."""
+
+    JSON = "json"
+    DEFAULT = JSON
+
+
+T = t.TypeVar("T")
+
+
+class ISerialization(t.Protocol, t.Generic[T]):
+    """Define the interface required to serialize and deserialize a generic object."""
+
+    @classmethod
+    def serialize(cls, obj: T) -> bytes:
+        """Serialize any object into bytes."""
+
+    @classmethod
+    def deserialize(cls, klass: type[T], s: bytes) -> T:
+        """Deserialize bytes into any object."""
+
+
+class RetryOptions(t.TypedDict):
+    """
+    Specify the available retry options.
+
+    max_retries int | None: The number times to keep retrying the execution of the task
+                            until the task executes successfully. Counting starts from
+                            0 so if max_retries = 2 for example, then the task will execute
+                            1 + 2 times (1 time for first execution, 2 times for re-try) in the
+                            worst case scenario.
+    on tuple[type[Exception], ...]: The tuple of exception classes to retry on. The task will
+                                    will only be retried if that exception that is raised
+                                    during task execution is an instance of one of the listed
+                                    exception classes.
+
+                                    Examples:
+
+                                        If `on=(Exception,)` then any kind of exception will trigger
+                                        a retry.
+
+                                        If `on=(ExceptionA, ExceptionB,)` and during task
+                                        execution ExceptionC was raised, then retry is not triggered.
+
+                                        If `on=tuple()` then during task definition aiotaskq will raise
+                                        `InvalidRetryOptions`
+    """
+
+    max_retries: int | None
+    on: tuple[type[Exception], ...]
+
+
+class TaskOptions(t.TypedDict):
+    """Specify the options available for a task."""
+
+    retry: RetryOptions | None

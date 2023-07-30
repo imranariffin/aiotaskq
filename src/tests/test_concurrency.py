@@ -6,7 +6,7 @@ import pytest
 
 from tests.apps import simple_app
 
-if t.TYPE_CHECKING:  # pragma: no cover
+if t.TYPE_CHECKING:
     from tests.conftest import WorkerFixture
 
 
@@ -84,7 +84,9 @@ async def test_concurrent_async_tasks_return_correctly(worker: "WorkerFixture"):
 
 
 @pytest.mark.asyncio
-async def test_async__concurrency_and_worker_rate_limit_of_1__effectively_serial(worker: "WorkerFixture"):
+async def test_async__concurrency_and_worker_rate_limit_of_1__effectively_serial(
+    worker: "WorkerFixture",
+):
     """Assert that if concurrency=1 & worker-rate-limit=1, tasks will effectively run serially."""
     # Given that the worker cli is run with "--concurrency 1" and "--worker-rate-limit 1" options
     await worker.start(app=simple_app.__name__, concurrency=1, worker_rate_limit=1)
