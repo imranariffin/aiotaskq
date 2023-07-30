@@ -8,7 +8,7 @@ import pytest
 from aiotaskq.interfaces import ConcurrencyType
 from aiotaskq.worker import validate_input
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from tests.conftest import WorkerFixture
 
 
