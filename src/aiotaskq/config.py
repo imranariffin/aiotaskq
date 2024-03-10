@@ -1,11 +1,10 @@
 """
-Module to define and store all constants used across the library.
+Module to define and store all configuration values used across the library.
 
 The public object from this module is `Config`. This object wraps
-all the constants, which include:
+all the configuration values, which include:
 - Variables
 - Environment variables
-- Static methods that return constant values
 """
 
 import logging
@@ -23,7 +22,6 @@ class Config:
     These include:
     - Variables
     - Environment variables
-    - Static methods that return constant values
     """
 
     @staticmethod
