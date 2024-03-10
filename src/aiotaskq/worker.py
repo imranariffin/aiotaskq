@@ -264,12 +264,16 @@ class GruntWorker(BaseWorker):
                 retry_max = task.retry["max_retries"]
                 if isinstance(e, task.retry["on"]):
                     retry = True
+                    # Set retry to 0 if first time
+                    async with redis.from_url(url=Config.broker_url()) as redis_client:
+                        if await redis_client.get(f"retry:{task.id}") is None:
+                            await redis_client.set(f"retry:{task.id}", 0)
 
         finally:
             # Retry if still within retry limit
             if retry:
-                async with redis.from_url(url="redis://localhost:6379") as redis_client:
-                    retries = int(await redis_client.get(f"retry:{task.id}") or 0)
+                async with redis.from_url(url=Config.broker_url()) as redis_client:
+                    retries = int(await redis_client.get(f"retry:{task.id}"))
                     if retry_max is not None and retries < retry_max:
                         retries += 1
                         logger.debug(
