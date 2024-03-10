@@ -16,7 +16,7 @@ import types
 import aioredis as redis
 
 from .concurrency_manager import ConcurrencyManagerSingleton
-from .constants import Config
+from .config import Config
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSub
 from .serde import Serialization

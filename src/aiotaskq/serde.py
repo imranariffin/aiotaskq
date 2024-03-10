@@ -9,7 +9,7 @@ import typing as t
 
 import jsonpickle
 
-from .constants import Config
+from .config import Config
 from .interfaces import ISerialization, SerializationType, T
 from .task import AsyncResult, Task
 

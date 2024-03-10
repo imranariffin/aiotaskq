@@ -8,7 +8,7 @@ import typing as t
 import typer
 
 from . import __version__
-from .constants import Config
+from .config import Config
 from .interfaces import ConcurrencyType
 from .worker import Defaults, run_worker_forever
 

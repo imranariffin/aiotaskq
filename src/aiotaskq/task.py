@@ -9,7 +9,7 @@ from types import ModuleType
 import typing as t
 import uuid
 
-from .constants import Config
+from .config import Config
 from .exceptions import InvalidArgument, ModuleInvalidForTask
 from .interfaces import IPubSub, PollResponse, TaskOptions
 from .pubsub import PubSub
