@@ -10,6 +10,7 @@ import typing as t
 import uuid
 
 from .config import Config
+from .constants import Constants
 from .exceptions import InvalidArgument, ModuleInvalidForTask
 from .interfaces import IPubSub, PollResponse, TaskOptions
 from .pubsub import PubSub
@@ -53,7 +54,7 @@ class AsyncResult(t.Generic[RT]):
 
         pubsub_ = PubSub.get(url=Config.broker_url(), poll_interval_s=0.01)
         async with pubsub_ as pubsub:  # pylint: disable=not-async-context-manager
-            await pubsub.subscribe(Config.results_channel_template().format(task_id=task_id))
+            await pubsub.subscribe(Constants.results_channel_template().format(task_id=task_id))
             message: PollResponse = await pubsub.poll()
 
         logger.debug("Message: %s", message)
@@ -189,7 +190,7 @@ class Task(t.Generic[P, RT]):
         )
         async with pubsub_ as pubsub:  # pylint: disable=not-async-context-manager
             logger.debug("Publishing task [task_id=%s, message=%s]", self.id, message)
-            await pubsub.publish(Config.tasks_channel(), message=message)
+            await pubsub.publish(Constants.tasks_channel(), message=message)
 
     async def _get_result(self) -> RT:
         logger.debug("Retrieving result for task [task_id=%s]", self.id)

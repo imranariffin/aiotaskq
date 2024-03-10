@@ -17,6 +17,7 @@ import aioredis as redis
 
 from .concurrency_manager import ConcurrencyManagerSingleton
 from .config import Config
+from .constants import Constants
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSub
 from .serde import Serialization
@@ -72,7 +73,7 @@ class BaseWorker(ABC):
 
     @staticmethod
     def _get_child_worker_tasks_channel(pid: int) -> str:
-        return f"{Config.tasks_channel()}:{pid}"
+        return f"{Constants.tasks_channel()}:{pid}"
 
 
 class Defaults:
@@ -154,7 +155,7 @@ class WorkerManager(BaseWorker):
 
         async with self.pubsub as pubsub:  # pylint: disable=not-async-context-manager
             counter = -1
-            await pubsub.subscribe(Config.tasks_channel())
+            await pubsub.subscribe(Constants.tasks_channel())
             while True:
                 self._logger.debug("[%s] Polling for a new task until it's available", self._pid)
                 message = await pubsub.poll()
@@ -293,7 +294,7 @@ class GruntWorker(BaseWorker):
                 )
                 result = AsyncResult(task_id=task.id, ready=True, result=task_result, error=None)
             task_serialized = Serialization.serialize(obj=result)
-            result_channel = Config.results_channel_template().format(task_id=task.id)
+            result_channel = Constants.results_channel_template().format(task_id=task.id)
             await pubsub.publish(channel=result_channel, message=task_serialized)
 
             if semaphore is not None:

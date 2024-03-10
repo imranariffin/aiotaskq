@@ -14,8 +14,6 @@ from os import environ
 from .interfaces import SerializationType
 
 _REDIS_URL = "redis://127.0.0.1:6379"
-_TASKS_CHANNEL = "channel:tasks"
-_RESULTS_CHANNEL_TEMPLATE = "channel:results:{task_id}"
 
 
 class Config:
@@ -31,7 +29,7 @@ class Config:
     @staticmethod
     def serialization_type() -> SerializationType:
         """Return the serialization type as provided via env var AIOTASKQ_SERIALIZATION."""
-        s: str | None = environ.get("AIOTASKQ_SERIALIZATION", SerializationType.DEFAULT.value)
+        s: str = environ.get("AIOTASKQ_SERIALIZATION", SerializationType.DEFAULT.value)
         return SerializationType[s.upper()]
 
     @staticmethod
@@ -49,13 +47,3 @@ class Config:
         """
         broker_url: str = environ.get("BROKER_URL", _REDIS_URL)
         return broker_url
-
-    @staticmethod
-    def tasks_channel() -> str:
-        """Return the channel name used for transporting task requests on the broker."""
-        return _TASKS_CHANNEL
-
-    @staticmethod
-    def results_channel_template() -> str:
-        """Return the template chnnale name used for transporting task results on the broker."""
-        return _RESULTS_CHANNEL_TEMPLATE
