@@ -12,7 +12,7 @@ import uuid
 from .config import Config
 from .constants import Constants
 from .exceptions import InvalidArgument, ModuleInvalidForTask
-from .interfaces import IPubSub, PollResponse, TaskOptions
+from .interfaces import PollResponse, TaskOptions
 from .pubsub import PubSub
 
 if t.TYPE_CHECKING:
@@ -31,7 +31,6 @@ class AsyncResult(t.Generic[RT]):
     To get the result of corresponding task, use `.get()`.
     """
 
-    pubsub: IPubSub
     task_id: str
     ready: bool = False
     result: RT | None
@@ -45,7 +44,6 @@ class AsyncResult(t.Generic[RT]):
         self.ready = ready
         self.result = result
         self.error = error
-        self.pubsub = PubSub.get(url=Config.broker_url(), poll_interval_s=0.01)
 
     @classmethod
     async def from_publisher(cls, task_id: str) -> "AsyncResult":
@@ -170,7 +168,7 @@ class Task(t.Generic[P, RT]):
         await task_.publish()
         return await task_._get_result()
 
-    async def publish(self) -> RT:
+    async def publish(self) -> None:
         """
         Publish the task.
 
