@@ -2,15 +2,18 @@
 
 #!/usr/bin/env python
 
+import logging
 import typing as t
 
 import typer
 
+from . import __version__
+from .config import Config
 from .interfaces import ConcurrencyType
 from .worker import Defaults, run_worker_forever
-from . import __version__
 
 cli = typer.Typer()
+logging.basicConfig(level=Config.log_level())
 
 
 def _version_callback(value: bool):

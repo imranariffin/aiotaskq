@@ -7,6 +7,7 @@ import typing as t
 import pytest
 
 from aiotaskq.interfaces import ConcurrencyType
+from aiotaskq.concurrency_manager import ConcurrencyManagerSingleton
 from aiotaskq.worker import Defaults, run_worker_forever
 
 
@@ -21,6 +22,9 @@ class WorkerFixture:
         worker_rate_limit: int = Defaults.worker_rate_limit(),
         poll_interval_s: t.Optional[float] = Defaults.poll_interval_s(),
     ) -> None:
+        # Reset singleton so each test is isolated
+        ConcurrencyManagerSingleton.reset()
+
         proc = multiprocessing.Process(
             target=lambda: run_worker_forever(
                 app_import_path=app,
@@ -66,3 +70,11 @@ def worker():
     yield worker_
     worker_.terminate()
     worker_.close()
+
+
+@pytest.fixture
+def some_file():
+    filename = "./some_file.txt"
+    yield filename
+    if os.path.exists(filename):
+        os.remove(filename)

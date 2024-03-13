@@ -5,7 +5,6 @@ import asyncio
 from functools import cached_property
 import importlib
 import inspect
-import json
 import logging
 import multiprocessing
 import os
@@ -14,15 +13,16 @@ import sys
 import typing as t
 import types
 
+import aioredis as redis
+
 from .concurrency_manager import ConcurrencyManagerSingleton
-from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
+from .config import Config
+from .constants import Constants
 from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSub
+from .serde import Serialization
+from .task import AsyncResult, Task
 
-if t.TYPE_CHECKING:  # pragma: no cover
-    from .task import Task
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -73,7 +73,7 @@ class BaseWorker(ABC):
 
     @staticmethod
     def _get_child_worker_tasks_channel(pid: int) -> str:
-        return f"{TASKS_CHANNEL}:{pid}"
+        return f"{Constants.tasks_channel()}:{pid}"
 
 
 class Defaults:
@@ -118,7 +118,7 @@ class WorkerManager(BaseWorker):
         worker_rate_limit: int,
         poll_interval_s: float,
     ) -> None:
-        self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        self.pubsub: IPubSub = PubSub.get(url=Config.broker_url(), poll_interval_s=poll_interval_s)
         self.concurrency_manager: IConcurrencyManager = ConcurrencyManagerSingleton.get(
             concurrency_type=concurrency_type,
             concurrency=concurrency,
@@ -155,7 +155,7 @@ class WorkerManager(BaseWorker):
 
         async with self.pubsub as pubsub:  # pylint: disable=not-async-context-manager
             counter = -1
-            await pubsub.subscribe(TASKS_CHANNEL)
+            await pubsub.subscribe(Constants.tasks_channel())
             while True:
                 self._logger.debug("[%s] Polling for a new task until it's available", self._pid)
                 message = await pubsub.poll()
@@ -192,7 +192,7 @@ class GruntWorker(BaseWorker):
     """
 
     def __init__(self, app_import_path: str, poll_interval_s: float, worker_rate_limit: int):
-        self.pubsub: IPubSub = PubSub.get(url=REDIS_URL, poll_interval_s=poll_interval_s)
+        self.pubsub: IPubSub = PubSub.get(url=Config.broker_url(), poll_interval_s=poll_interval_s)
         self._worker_rate_limit = worker_rate_limit
         super().__init__(app_import_path=app_import_path)
 
@@ -226,20 +226,13 @@ class GruntWorker(BaseWorker):
                     "[%s] Received task to from main worker [message=%s, channel=%s]",
                     *(self._pid, message, channel),
                 )
-                task_info = json.loads(message["data"])
-                task_args = task_info["args"]
-                task_kwargs = task_info["kwargs"]
-                task_id: str = task_info["task_id"]
-                task_func_name: str = task_id.split(":")[0].split(".")[-1]
-                task: "Task" = getattr(self.app, task_func_name)
+                task_serialized: str = message["data"]
+                task: "Task" = Serialization.deserialize(Task, task_serialized)
 
                 # Fire and forget: execute the task and publish result
                 task_asyncio: "asyncio.Task" = self._execute_task_and_publish(
                     pubsub=pubsub,
                     task=task,
-                    task_args=task_args,
-                    task_kwargs=task_kwargs,
-                    task_id=task_id,
                     semaphore=semaphore,
                 )
                 asyncio.create_task(task_asyncio)
@@ -248,31 +241,68 @@ class GruntWorker(BaseWorker):
         self,
         pubsub: IPubSub,
         task: "Task",
-        task_args: list,
-        task_kwargs: dict,
-        task_id: str,
         semaphore: t.Optional["asyncio.Semaphore"],
     ):
         self._logger.debug(
             "[%s] Executing task %s(*%s, **%s)",
-            *(self._pid, task_id, task_args, task_kwargs),
+            *(self._pid, task.id, task.args, task.kwargs),
         )
-        if inspect.iscoroutinefunction(task.func):
-            task_result = await task(*task_args, **task_kwargs)
-        else:
-            task_result = task(*task_args, **task_kwargs)
 
-        # Publish the task return value
-        self._logger.debug(
-            "[%s] Publishing task result %s(*%s, **%s)",
-            *(self._pid, task_id, task_args, task_kwargs),
-        )
-        task_result = json.dumps(task_result)
-        result_channel = RESULTS_CHANNEL_TEMPLATE.format(task_id=task_id)
-        await pubsub.publish(channel=result_channel, message=task_result)
+        retry = False
+        error = None
+        retries: int = None
+        retry_max: int | None = None
+        task_result: t.Any = None
+        try:
+            if inspect.iscoroutinefunction(task.func):
+                task_result = await task(*task.args, **task.kwargs)
+            else:
+                task_result = task(*task.args, **task.kwargs)
+        except Exception as e:  # pylint: disable=broad-except
+            error = e
+            if task.retry is not None:
+                retry_max = task.retry["max_retries"]
+                if isinstance(e, task.retry["on"]):
+                    retry = True
+                    # Set retry to 0 if first time
+                    async with redis.from_url(url=Config.broker_url()) as redis_client:
+                        if await redis_client.get(f"retry:{task.id}") is None:
+                            await redis_client.set(f"retry:{task.id}", 0)
 
-        if semaphore is not None:
-            semaphore.release()
+        finally:
+            # Retry if still within retry limit
+            if retry:
+                async with redis.from_url(url=Config.broker_url()) as redis_client:
+                    retries = int(await redis_client.get(f"retry:{task.id}"))
+                    if retry_max is not None and retries < retry_max:
+                        retries += 1
+                        logger.debug(
+                            "Task %s[%s] failed on exception %s, will retry (%s/%s)",
+                            *(task.__qualname__, task.id, error, retries, retry_max),
+                        )
+                        asyncio.create_task(task.publish())
+                        await redis_client.set(f"retry:{task.id}", retries)
+                        if semaphore is not None:
+                            semaphore.release()
+                        return  # pylint: disable=lost-exception
+
+            if error:
+                # Publish error
+                logger.debug("Publishing error")
+                result = AsyncResult(task_id=task.id, ready=True, result=None, error=error)
+            else:
+                # Publish the task return value
+                self._logger.debug(
+                    "[%s] Publishing task result %s(*%s, **%s)",
+                    *(self._pid, task.id, task.args, task.kwargs),
+                )
+                result = AsyncResult(task_id=task.id, ready=True, result=task_result, error=None)
+            task_serialized = Serialization.serialize(obj=result)
+            result_channel = Constants.results_channel_template().format(task_id=task.id)
+            await pubsub.publish(channel=result_channel, message=task_serialized)
+
+            if semaphore is not None:
+                semaphore.release()
 
 
 def validate_input(app_import_path: str) -> t.Optional[str]:
