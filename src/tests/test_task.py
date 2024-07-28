@@ -41,7 +41,7 @@ async def test_invalid_argument_provided_to_apply_async(
     invalid_kwargs: dict,
 ):
     # Given a worker running in the background
-    await worker.start(simple_app.__name__)
+    await worker.start(app=simple_app.__name__)
 
     # When a task has been applied with invalid arguments
     # Then an error should raised
@@ -59,7 +59,7 @@ async def test_invalid_argument_provided_to_apply_async(
 @pytest.mark.asyncio
 async def test_retry_as_per_task_definition(worker: "WorkerFixture", some_file: str):
     # Given a worker running in the background
-    await worker.start(simple_app.__name__, concurrency=1)
+    await worker.start(app=simple_app.__name__, concurrency=1)
     # And a task defined with retry configuration
     assert simple_app.append_to_file.retry["max_retries"] == 2
     assert simple_app.append_to_file.retry["on"] == (simple_app.SomeException,)
@@ -114,7 +114,7 @@ async def test_retry_as_per_task_call(
     some_file: str,
 ):
     # Given a worker running in the background
-    await worker.start(simple_app.__name__, concurrency=1)
+    await worker.start(app=simple_app.__name__, concurrency=1)
     # And a task defined WITHOUT retry configuration
     assert simple_app.append_to_file_2.retry is None
     # And the task will raise an exception when called
@@ -150,7 +150,7 @@ async def test_retry_as_per_task_call(
 @pytest.mark.asyncio
 async def test_no_retry_as_per_task_call(worker: "WorkerFixture", some_file: str):
     # Given a worker running in the background
-    await worker.start(simple_app.__name__, concurrency=1)
+    await worker.start(app=simple_app.__name__, concurrency=1)
     # And a task defined WITH retry configuration
     assert simple_app.append_to_file.retry is not None
     # And the task will raise an exception when called
@@ -188,7 +188,7 @@ async def test_no_retry_as_per_task_call(worker: "WorkerFixture", some_file: str
 async def test_retry_until_successful(worker: "WorkerFixture", some_file: str):
     """Assert that task will stop being retried once it's successfully executed without error."""
     # Given a worker running in the background
-    await worker.start(simple_app.__name__, concurrency=1)
+    await worker.start(app=simple_app.__name__, concurrency=1)
     # And a task defined WITH retry max_retries = 2
     assert simple_app.append_to_file_first_3_times_with_error.retry["max_retries"] == 2
     # And the task will raise an exception when called until it's called for the 3rd time
@@ -240,7 +240,7 @@ def test_empty_retry_on_during_task_definition__invalid():
             },
         )
         def _():
-            return "Hello world"
+            return "Hello world"  # pragma: no cover
     except Exception as e:  # pylint: disable=broad-except
         exception = e
     finally:

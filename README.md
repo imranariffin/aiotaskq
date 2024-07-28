@@ -8,11 +8,15 @@ A simple asynchronous task queue
 
 ## Motivation
 
-Popular asynchronous worker library like [Celery](https://github.com/celery/celery) doesn't support asyncio and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
+Popular asynchronous worker library like [Celery](https://github.com/celery/celery) doesn't support async-await and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
 
 Plus, it is also fully-typed for better productivity and correctness.
 
-Give it a try and let us know if you like it. For questions or feedback feel to file issues on this repository.
+Give it a try and let us know if you like it. For questions or feedback, feel free to file issues on this repository.
+
+## Sample codes
+
+1. [Simple Django App](/src/tests/apps/sample_app_django/README.md)
 
 ## Example Usage
 Install aiotaskq

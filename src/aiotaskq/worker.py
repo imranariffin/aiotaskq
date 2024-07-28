@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 import asyncio
 from functools import cached_property
-import importlib
 import inspect
 import logging
 import multiprocessing
@@ -22,6 +21,7 @@ from .interfaces import ConcurrencyType, IConcurrencyManager, IPubSub
 from .pubsub import PubSub
 from .serde import Serialization
 from .task import AsyncResult, Task
+from .utils import import_from_cwd
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class BaseWorker(ABC):
     concurrency_manager: IConcurrencyManager
 
     def __init__(self, app_import_path: str):
-        self.app = importlib.import_module(app_import_path)
+        self.app = import_from_cwd(app_import_path)
 
     def run_forever(self) -> None:
         """
@@ -112,6 +112,7 @@ class WorkerManager(BaseWorker):
 
     def __init__(
         self,
+        *,
         app_import_path: str,
         concurrency: int,
         concurrency_type: ConcurrencyType,
@@ -203,6 +204,7 @@ class GruntWorker(BaseWorker):
         self._logger.debug("[%s] Started main loop", self._pid)
         channel: str = self._get_child_worker_tasks_channel(pid=self._pid)
         batch_size = self._worker_rate_limit if self._worker_rate_limit != -1 else 99
+        semaphore: asyncio.Semaphore | None = None
 
         # We only need to rate-limit the incoming tasks with batch size if batch_size is provided
         if batch_size != Defaults.worker_rate_limit():
@@ -308,7 +310,7 @@ class GruntWorker(BaseWorker):
 def validate_input(app_import_path: str) -> t.Optional[str]:
     """Validate all worker cli inputs and return an error string if any."""
     try:
-        importlib.import_module(app_import_path)
+        import_from_cwd(app_import_path)
     except ModuleNotFoundError:
         return (
             f"Error at argument `--app_import_path {app_import_path}`:"

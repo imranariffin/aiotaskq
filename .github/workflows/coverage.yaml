@@ -1,24 +1,77 @@
 name: coverage
+
 on:
   pull_request:
     branches:
     - main
+
   push:
     branches:
     - main
+
 jobs:
   run_unit_tests:
-    timeout-minutes: 10
+    timeout-minutes: 5
     runs-on: ubuntu-latest
+
+    # Service containers to run with `runner-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
+      
+      redis:
+        image: "redis"
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          # Maps port 6379 on service container to the host
+          - 6379:6379
+
     steps:
     - uses: actions/checkout@v1
-    - run: docker compose -f ./docker-compose.yml up --detach redis
+
     - uses: actions/setup-python@v3
       with:
         python-version: "3.10.x"
-    - run: source ./activate.sh
-    - run: pip install --upgrade pip
-    - run: pip install -e .[dev]
-    - run: pip freeze
-    - run: ./test.sh
+
+    - name: "Prepare Python"
+      run: >
+        source ./activate.sh;
+        pip install --upgrade pip;
+        pip install -e .[dev];
+        pip freeze;
+
+    - name: "Run tests"
+      run: ./test.sh
+      env:
+        # Postgres values
+        POSTGRES_HOST: localhost
+        POSTGRES_USER: postgres
+        POSTGRES_PORT: 5432
+        # Redis values
+        REDIS_URL: redis://localhost:6379/0
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+
+    - name: "Report coverage to CLI"
+      run: coverage report
+
     - uses: codecov/codecov-action@v3.1.0
