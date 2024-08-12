@@ -13,7 +13,7 @@ async def test_sync_and_async_parity__simple_app(worker: WorkerFixture):
     await worker.start(app=app.__name__, concurrency=8)
     # Then there should be parity between sync and async call of the tasks
     tests: list[tuple[Task, tuple, dict]] = [
-        (simple_app.wait, tuple() ,{"t_s": 1}),
+        (simple_app.wait, tuple(), {"t_s": 1}),
         (simple_app.echo, (42,), {}),
         (simple_app.add, tuple(), {"x": 41, "y": 1}),
         (simple_app.power, (2,), {"b": 64}),

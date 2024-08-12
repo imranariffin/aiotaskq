@@ -19,3 +19,7 @@ class ConcurrencyTypeNotSupported(Exception):
 
 class InvalidArgument(Exception):
     """A task is applied with invalid arguments."""
+
+
+class InvalidRetryOptions(Exception):
+    """A task is defined with invalid retry options."""

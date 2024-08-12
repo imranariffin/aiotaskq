@@ -1,21 +1,26 @@
 """Module to define the main logic of the library."""
+# pylint: disable=cyclic-import
+
+import copy
 
 import inspect
-import json
 import logging
 from types import ModuleType
 import typing as t
 import uuid
 
-from .constants import REDIS_URL, RESULTS_CHANNEL_TEMPLATE, TASKS_CHANNEL
-from .exceptions import InvalidArgument, ModuleInvalidForTask
-from .interfaces import IPubSub, PollResponse
+from .config import Config
+from .constants import Constants
+from .exceptions import InvalidArgument, InvalidRetryOptions, ModuleInvalidForTask
+from .interfaces import PollResponse, TaskOptions
 from .pubsub import PubSub
+
+if t.TYPE_CHECKING:
+    from .interfaces import RetryOptions
 
 RT = t.TypeVar("RT")
 P = t.ParamSpec("P")
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -26,25 +31,25 @@ class AsyncResult(t.Generic[RT]):
     To get the result of corresponding task, use `.get()`.
     """
 
-    pubsub: IPubSub
-    _result: RT
-    _completed: bool = False
-    _task_id: str
+    task_id: str
+    ready: bool = False
+    result: RT | None
+    error: Exception | None
 
-    def __init__(self, task_id: str) -> None:
+    def __init__(
+        self, task_id: str, result: RT | None, ready: bool, error: Exception | None
+    ) -> None:
         """Store task_id in AsyncResult instance."""
-        self._task_id = task_id
-        self.pubsub = PubSub.get(url=REDIS_URL, poll_interval_s=0.01)
+        self.task_id = task_id
+        self.ready = ready
+        self.result = result
+        self.error = error
 
-    async def get(self) -> RT:
+    def get(self) -> RT | Exception:
         """Return the result of the task once finished."""
-        async with self.pubsub as pubsub:  # pylint: disable=not-async-context-manager
-            message: PollResponse
-            await pubsub.subscribe(RESULTS_CHANNEL_TEMPLATE.format(task_id=self._task_id))
-            message = await self.pubsub.poll()
-            logger.debug("Message: %s", message)
-            _result: RT = json.loads(message["data"])
-        return _result
+        if self.error is not None:
+            return self.error
+        return self.result
 
 
 class Task(t.Generic[P, RT]):
@@ -61,7 +66,7 @@ class Task(t.Generic[P, RT]):
         return x + y
     some_task = aiotaskq.task(some_func)
     # Or equivalently:
-    # @aiotaskq.task
+    # @aiotaskq.task()
     # def some_task(x: int, y: int) -> int:
     #     return x + y
 
@@ -73,23 +78,61 @@ class Task(t.Generic[P, RT]):
     ```
     """
 
-    __qualname__: str
+    id: str
     func: t.Callable[P, RT]
+    retry: "RetryOptions | None"
+    args: t.Optional[tuple[t.Any, ...]]
+    kwargs: t.Optional[dict]
 
-    def __init__(self, func: t.Callable[P, RT]) -> None:
+    def __init__(
+        self,
+        func: t.Callable[P, RT],
+        *,
+        retry: "RetryOptions | None" = None,
+        task_id: t.Optional[str] = None,
+        args: t.Optional[tuple[t.Any, ...]] = None,
+        kwargs: t.Optional[dict] = None,
+    ) -> None:
         """
         Store the underlying function and an automatically generated task_id in the Task instance.
         """
         self.func = func
 
+        if retry and len(retry.get("on", [])) == 0:
+            raise InvalidRetryOptions('retry.on should not be empty')
+        self.retry = retry
+
+        self.args = args
+        self.kwargs = kwargs
+        self.id = task_id
+
+        # Copy metadata from the function to simulate as close as possible
+
+        self.__module__ = self.func.__module__
+        self.__qualname__ = self.func.__qualname__
+        self.__name__ = self.func.__name__
+
     def __call__(self, *args, **kwargs) -> RT:
         """Call the task synchronously, by directly executing the underlying function."""
         return self.func(*args, **kwargs)
 
+    def with_retry(self, max_retries: int, on: tuple[type[Exception], ...]) -> "Task":
+        """
+        Return a **copy** of self with the provided retry options.
+
+        We return a copy so that we don't overwrite the original task definition.
+        """
+        task_: Task = copy.deepcopy(self)
+        if len(on) == 0:
+            raise InvalidRetryOptions
+        retry: RetryOptions = {"max_retries": max_retries, "on": on}
+        task_.retry = retry
+        return task_
+
     def generate_task_id(self) -> str:
         """Generate a unique id for an individual call to a task."""
         id_ = uuid.uuid4()
-        return f"{self.__qualname__}:{id_}"
+        return f"{self.__module__}.{self.__qualname__}:{id_}"
 
     async def apply_async(self, *args: P.args, **kwargs: P.kwargs) -> RT:
         """
@@ -106,26 +149,54 @@ class Task(t.Generic[P, RT]):
         """
         # Raise error if arguments provided are invalid, before enything
         self._validate_arguments(task_args=args, task_kwargs=kwargs)
+        task_ = copy.deepcopy(self)
+        task_.args = args
+        task_.kwargs = kwargs
+        if task_.id is None:
+            task_.id = task_.generate_task_id()
+        # pylint: disable=protected-access
+        await task_.publish()
+        return await task_._get_result()
 
-        task_id: str = self.generate_task_id()
-        message: str = json.dumps(
-            {
-                "task_id": task_id,
-                "args": args,
-                "kwargs": kwargs,
-            }
-        )
+    async def publish(self) -> None:
+        """
+        Publish the task.
+
+        At this point we expected that args & kwargs are already provided and task_id is already generated.
+        """
+        from aiotaskq.serde import Serialization  # pylint: disable=import-outside-toplevel
+
+        assert hasattr(self, "args") and hasattr(self, "kwargs") and self.id is not None
+
+        message: bytes = Serialization.serialize(self)
+
         pubsub_ = PubSub.get(
-            url=REDIS_URL, poll_interval_s=0.01, max_connections=10, decode_responses=True
+            url=Config.broker_url(),
+            poll_interval_s=0.01,
+            max_connections=10,
+            decode_responses=True,
         )
         async with pubsub_ as pubsub:  # pylint: disable=not-async-context-manager
-            logger.debug("Publishing task [task_id=%s, message=%s]", task_id, message)
-            await pubsub.publish(TASKS_CHANNEL, message=message)
+            logger.debug("Publishing task [task_id=%s, message=%s]", self.id, message)
+            await pubsub.publish(Constants.tasks_channel(), message=message)
 
-            logger.debug("Retrieving result for task [task_id=%s]", task_id)
-            async_result: AsyncResult[RT] = AsyncResult(task_id=task_id)
-            result: RT = await async_result.get()
+    async def _get_result(self) -> RT:
+        from aiotaskq.serde import Serialization  # pylint: disable=import-outside-toplevel
 
+        logger.debug("Retrieving result for task [task_id=%s]", self.id)
+        pubsub_ = PubSub.get(url=Config.broker_url(), poll_interval_s=0.01)
+        async with pubsub_ as pubsub:  # pylint: disable=not-async-context-manager
+            await pubsub.subscribe(Constants.results_channel_template().format(task_id=self.id))
+            message: PollResponse = await pubsub.poll()
+
+        logger.debug("Message: %s", message)
+
+        result_serialized: bytes = message["data"]
+        async_result: AsyncResult[RT] = Serialization.deserialize(AsyncResult, result_serialized)
+
+        result: RT | Exception = async_result.get()
+        if isinstance(result, Exception):
+            raise result
         return result
 
     def _validate_arguments(self, task_args: tuple, task_kwargs: dict):
@@ -138,23 +209,26 @@ class Task(t.Generic[P, RT]):
             ) from exc
 
 
-def task(func: t.Callable[P, RT]) -> Task[P, RT]:
-    """Decorator to convert a callable into an aiotaskq Task instance."""
-    func_module: t.Optional[ModuleType] = inspect.getmodule(func)
+def task(*, options: TaskOptions | None = None) -> t.Callable[[t.Callable[P, RT]], Task[P, RT]]:
+    """
+    Decorator to convert a callable into an aiotaskq Task instance.
 
-    if func_module is None:
-        raise ModuleInvalidForTask(
-            f'Function "{func.__name__}" is defined in an invalid module {func_module}'
-        )
+    Args:
+        options (aiotaskq.interfaces.TaskOptions | None): Specify the options available for a task.
+    """
 
-    module_path = ".".join(
-        [
-            p.split(".py")[0]
-            for p in func_module.__file__.strip("./").split("/")  # type: ignore
-            if p != "src"
-        ]
-    )
-    task_ = Task[P, RT](func)
-    task_.__qualname__ = f"{module_path}.{func.__name__}"
-    task_.__module__ = module_path
-    return task_
+    if options is None:
+        options = {}
+
+    def _wrapper(func: t.Callable[P, RT]) -> Task[P, RT]:
+        func_module: t.Optional[ModuleType] = inspect.getmodule(func)
+
+        if func_module is None:
+            raise ModuleInvalidForTask(
+                f'Function "{func.__name__}" is defined in an invalid module {func_module}'
+            )
+
+        task_ = Task[P, RT](func, **options)
+        return task_
+
+    return _wrapper

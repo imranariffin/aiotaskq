@@ -7,7 +7,7 @@ Usage::
     import aiotaskq
 
 
-    @aiotaskq.task
+    @aiotaskq.task()
     def some_task(b: int) -> int:
         # Some task with high cpu usage
         def _naive_fib(n: int) -> int:
