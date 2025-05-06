@@ -96,7 +96,7 @@ async def test_run_worker__incorrect_app_name(worker: "WorkerFixture"):
 async def test_handle_keyboard_interrupt(worker: "WorkerFixture"):
     # Given a running worker with some child processes
     concurrency = 4
-    await worker.start("tests.apps.simple_app", concurrency=concurrency)
+    await worker.start(app="tests.apps.simple_app", concurrency=concurrency)
     bash_command = (
         f"pgrep -P {worker.proc.pid} "  # Get pids of all child processes of the worker
         "| wc -l"  # Count the number of pids
@@ -118,7 +118,7 @@ async def test_handle_keyboard_interrupt(worker: "WorkerFixture"):
 async def test_handle_termination_signal(worker: "WorkerFixture"):
     # Given a running worker with some child processes
     concurrency = 4
-    await worker.start("tests.apps.simple_app", concurrency=concurrency)
+    await worker.start(app="tests.apps.simple_app", concurrency=concurrency)
     bash_command = (
         f"pgrep -P {worker.proc.pid} "  # Get pids of all child processes of the worker
         "| wc -l"  # Count the number of pids

@@ -12,7 +12,7 @@ from os import environ
 
 from .interfaces import SerializationType
 
-_REDIS_URL = "redis://127.0.0.1:6379"
+_REDIS_URL = environ.get("REDIS_URL", "redis://127.0.0.1:6379")
 
 
 class Config:
@@ -33,7 +33,7 @@ class Config:
     @staticmethod
     def log_level() -> int:
         """Return the log level as provided via env var LOG_LEVEL."""
-        level: int = int(environ.get("AIOTASKQ_LOG_LEVEL", logging.DEBUG))
+        level: int = getattr(logging, environ.get("AIOTASKQ_LOG_LEVEL", "DEBUG"))
         return level
 
     @staticmethod
@@ -41,7 +41,7 @@ class Config:
         """
         Return the broker url as provided via env var BROKER_URL.
 
-        Defaults to "redis://127.0.0.1:6379".
+        Defaults to the env var REDIS_URL or "redis://127.0.0.1:6379" if env var is not provided.
         """
         broker_url: str = environ.get("BROKER_URL", _REDIS_URL)
         return broker_url

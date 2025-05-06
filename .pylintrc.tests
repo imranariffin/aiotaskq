@@ -470,7 +470,8 @@ good-names=i,
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
-good-names-rgxs=
+# two-letter variables should always be accepted
+good-names-rgxs=[a-z]{2}$
 
 # Include a hint for the correct naming format with invalid-name.
 include-naming-hint=no
@@ -491,7 +492,7 @@ method-naming-style=snake_case
 #method-rgx=
 
 # Naming style matching correct module names.
-module-naming-style=snake_case
+module-naming-style=any
 
 # Regular expression matching correct module names. Overrides module-naming-
 # style. If left empty, module names will be checked with the set naming style.

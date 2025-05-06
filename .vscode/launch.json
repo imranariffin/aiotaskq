@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Python: Attach",
             "type": "python",
@@ -54,6 +55,37 @@
                 "tests.apps.simple_app"
             ],
             "console": "integratedTerminal",
+        },
+        {
+            "name": "Celery Worker (Django Sample App)",
+            "type": "python",
+            "request": "launch",
+            "module": "celery",
+            "args": [
+                "-A",
+                "sample_app_django",
+                "worker",
+                "--concurrency",
+                "4",
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src/tests/apps/sample_app_django/",
+            "justMyCode": false
+        },
+        {
+            "name": "AioTaskQ Worker (Django Sample App)",
+            "type": "python",
+            "request": "launch",
+            "module": "aiotaskq",
+            "args": [
+                "worker",
+                "sample_app_django",
+                "--concurrency",
+                "4",
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/src/tests/apps/sample_app_django/",
+            "justMyCode": false
         }
     ]
 }

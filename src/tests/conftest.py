@@ -16,6 +16,7 @@ class WorkerFixture:
 
     async def start(
         self,
+        *,
         app: str,
         concurrency: t.Optional[int] = Defaults.concurrency(),
         concurrency_type: t.Optional[ConcurrencyType] = Defaults.concurrency_type(),

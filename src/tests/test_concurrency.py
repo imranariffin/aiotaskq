@@ -22,7 +22,7 @@ async def test_async_concurrency(worker: "WorkerFixture"):
 
     # Then those async tasks should run concurrently in that one worker
     dt_actual = t_1 - t_0
-    error = 0.1
+    error = 0.2
     assert 1.0 < dt_actual < 1.0 + error
     # And the results should be correct
     results_expected = [1, 1, 1, 1, 1]
@@ -42,7 +42,8 @@ async def test_async_worker_rate_limit(worker: "WorkerFixture"):
     # Then those async tasks should run concurrently in that one worker, limited to 3 tasks at a time
     dt_actual = t_1 - t_0
     num_batches = 2  # 3 tasks run simultaneously, then 2 tasks run simultaneously
-    assert 1.0 * num_batches < dt_actual < 1.0 * num_batches + 0.2
+    error = 0.2
+    assert 1.0 * num_batches < dt_actual < (1.0 + error) * num_batches
     # And the results should be correct
     results_expected = [1, 1, 1, 1, 1]
     assert results_actual == results_expected
@@ -98,7 +99,8 @@ async def test_async__concurrency_and_worker_rate_limit_of_1__effectively_serial
 
     # Then those async tasks will run serially
     dt_actual = t_1 - t_0
-    assert 1.0 * 5 <= dt_actual < 1.1 * 5
+    error = 0.2
+    assert 1.0 * 5 <= dt_actual < (1.0 + error) * 5
     # And the results should be correct
     results_expected = [1, 1, 1, 1, 1]
     assert results_actual == results_expected

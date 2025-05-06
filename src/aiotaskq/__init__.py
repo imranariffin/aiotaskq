@@ -31,10 +31,9 @@ from pathlib import Path
 
 import tomlkit
 
+from .app import App
 from .task import task
 
-with Path("pyproject.toml").open("r", encoding="utf-8") as f:
-    toml_dict = tomlkit.loads(f.read())
-    __version__ = toml_dict["project"]["version"]
 
-__all__ = ["__version__", "task"]
+__version__ = "0.0.14"
+__all__ = ["__version__", "task", "App"]
