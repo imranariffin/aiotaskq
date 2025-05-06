@@ -1,12 +1,12 @@
 current_git_branch=$(git name-rev --name-only HEAD)
 is_main_branch=$(echo $current_git_branch | tr -d "\n" | grep -E "(^|^remotes\/origin\/)main$")
-if [[ -z "$is_main_branch" ]]
+if [ -z "$is_main_branch" ]
 then
-    old_version=$(git diff origin/main -- pyproject.toml | grep '^\-version' | tr -dc '0-9.')
-    new_version=$(git diff origin/main -- pyproject.toml | grep '^\+version' | tr -dc '0-9.')
-else
     old_version=$(git diff HEAD~1 -- pyproject.toml | grep '^\-version' | tr -dc '0-9.')
     new_version=$(git diff HEAD~1 -- pyproject.toml | grep '^\+version' | tr -dc '0-9.')
+else
+    old_version=$(git diff origin/main -- pyproject.toml | grep '^\-version' | tr -dc '0-9.')
+    new_version=$(git diff origin/main -- pyproject.toml | grep '^\+version' | tr -dc '0-9.')
 fi
 
 echo "On branch \"$current_git_branch\": old_version=\"$old_version\", new_version=\"$new_version\""
@@ -18,7 +18,7 @@ then
 fi
 echo "Changes meant as new a version (from $old_version to $new_version)"
 
-if [[ -z "$is_main_branch" ]]
+if [ -z "$is_main_branch" ]
 then
     echo "Not on \"origin/main\" branch [branch=$current_git_branch], creating custom dev version based on commit hash ..."
     git_short_commit_hash_int=$(git rev-parse --short=7 HEAD | python -c "import sys; print(int(input(), 16))")
