@@ -2,11 +2,11 @@ current_git_branch=$(git name-rev --name-only HEAD)
 is_main_branch=$(echo $current_git_branch | tr -d "\n" | grep -E "(^|^remotes\/origin\/)main$")
 if [ -z "$is_main_branch" ]
 then
-    old_version=$(git diff HEAD~1 -- pyproject.toml | grep '^\-version' | tr -dc '0-9.')
-    new_version=$(git diff HEAD~1 -- pyproject.toml | grep '^\+version' | tr -dc '0-9.')
-else
     old_version=$(git diff origin/main -- pyproject.toml | grep '^\-version' | tr -dc '0-9.')
     new_version=$(git diff origin/main -- pyproject.toml | grep '^\+version' | tr -dc '0-9.')
+else
+    old_version=$(git diff HEAD~1 -- pyproject.toml | grep '^\-version' | tr -dc '0-9.')
+    new_version=$(git diff HEAD~1 -- pyproject.toml | grep '^\+version' | tr -dc '0-9.')
 fi
 
 echo "On branch \"$current_git_branch\": old_version=\"$old_version\", new_version=\"$new_version\""
