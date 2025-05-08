@@ -32,7 +32,7 @@ then
 
     trap "git checkout -- pyproject.toml" EXIT
 else
-    echo "On \"$current_git_branch\" branch"
+    echo "On \"main\" branch (\"$current_git_branch\")"
     repository="pypi"
     download_index_url="https://pypi.org/simple/"
     export TWINE_PASSWORD=$PYPI_TOKEN
