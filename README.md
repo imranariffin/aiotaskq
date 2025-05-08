@@ -16,7 +16,7 @@ Give it a try and let us know if you like it. For questions or feedback, feel fr
 
 ## Sample codes
 
-1. [Simple Django App](/src/tests/apps/sample_app_django/README.md)
+1. [Simple Django App](/src/tests/apps/sample_app_django/sample_app_django/README.md)
 
 ## Example Usage
 Install aiotaskq
