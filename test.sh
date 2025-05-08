@@ -47,7 +47,7 @@ DIFF=$(\
     ./src/tests/apps/sample_app_django/out-celery.json \
     ./src/tests/apps/sample_app_django/out-aiotaskq.json \
 )
-if [[ -z $DIFF ]]; then
+if [ -z $DIFF ]; then
     echo "Tests against sample codes SUCCEEDED"
 else
     echo "Tests against sample codes FAILED"

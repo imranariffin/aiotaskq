@@ -27,9 +27,9 @@ Celery worker is ready with concurrency=4
 $ LOG_LEVEL=INFO ./src/tests/apps/sample_app_django/scripts/test_show_total_spending_aiotaskq.sh
 aiotaskq worker is ready with concurrency=4
 ...
-2025-02-02 20:20:44,752 INFO     api.management.commands.show_total_spending_by_user CMD show_total_spending_by_user --celery ...
+2025-02-02 20:20:44,752 INFO     api.management.commands.show_total_spending_by_user CMD show_total_spending_by_user --aiotaskq ...
 2025-02-02 20:20:44,764 INFO     api.management.commands.show_total_spending_by_user Waiting for 10 tasks to finish
-2025-02-02 20:20:44,876 INFO     api.management.commands.show_total_spending_by_user CMD show_total_spending_by_user --celery took 0.1231 seconds
+2025-02-02 20:20:44,876 INFO     api.management.commands.show_total_spending_by_user CMD show_total_spending_by_user --aiotaskq took 0.1231 seconds
 ```
 
 Which shows that aiotaskq had much better throughput.
