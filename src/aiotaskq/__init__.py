@@ -35,5 +35,5 @@ from .app import App
 from .task import task
 
 
-__version__ = "0.0.16"
+__version__ = "0.0.17"
 __all__ = ["__version__", "task", "App"]
