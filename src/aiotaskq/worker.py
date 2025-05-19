@@ -86,8 +86,8 @@ class Defaults:
 
     @classmethod
     def concurrency_type(cls) -> str:
-        """Return the default concurrency type ("multiprocessing")."""
-        return ConcurrencyType.MULTIPROCESSING.value
+        """Return the default concurrency type ("multiprocessing-pool")."""
+        return ConcurrencyType.MULTIPROCESSING_POOL.value
 
     @classmethod
     def worker_rate_limit(cls) -> int:

@@ -27,6 +27,9 @@ class ConcurrencyManagerSingleton:
         if concurrency_type == ConcurrencyType.MULTIPROCESSING:
             cls._instance = MultiProcessing(concurrency=concurrency)
             return cls._instance
+        if concurrency_type == ConcurrencyType.MULTIPROCESSING_POOL:
+            cls._instance = MultiProcessingPool(concurrency=concurrency)
+            return cls._instance
         raise ConcurrencyTypeNotSupported(
             f'Concurrency type "{concurrency_type}" is not yet supported.'
         )
@@ -60,3 +63,33 @@ class MultiProcessing:
     @cached_property
     def _logger(self):
         return logging.getLogger(f"[{os.getpid()}] [{self.__class__.__qualname__}]")
+
+class MultiProcessingPool:
+    """Implementation of a ConcurrencyManager using multiprocessing.Pool and Queue."""
+    def __init__(self, concurrency: int) -> None:
+        self.concurrency = concurrency
+        self.processes: list[IProcess] = []
+        self._pool = multiprocessing.Pool(processes=concurrency)
+        self._task_queue = multiprocessing.Queue()
+        self._result_queue = multiprocessing.Queue()
+
+    def start(self, func: t.Callable, *args: t.ParamSpecArgs) -> None:
+        # Instead of starting processes manually, use Pool.apply_async
+        for _ in range(self.concurrency):
+            self._pool.apply_async(self._worker_loop, (func, *args))
+
+    def _worker_loop(self, func, *args):
+        while True:
+            task = self._task_queue.get()
+            if task is None:
+                break
+            result = func(*args)
+            self._result_queue.put(result)
+
+    def terminate(self) -> None:
+        self._pool.terminate()
+        self._pool.join()
+
+    @cached_property
+    def _logger(self):
+        return logging.getLogger(f"[{os.getpid()}] [MultiProcessingPool]")

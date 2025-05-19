@@ -48,6 +48,7 @@ class ConcurrencyType(str, enum.Enum):
     """Define supported concurrency types."""
 
     MULTIPROCESSING = "multiprocessing"
+    MULTIPROCESSING_POOL = "multiprocessing-pool"
 
 
 class IConcurrencyManager(t.Protocol):
