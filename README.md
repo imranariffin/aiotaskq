@@ -10,6 +10,50 @@ A simple asynchronous task queue
 
 Popular asynchronous worker library like [Celery](https://github.com/celery/celery) doesn't support async-await and is hard to use for advanced usage. `aiotaskq` aims to help users compose tasks in a very native async-await manner.
 
+## How it works
+
+```
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │      App                    Task Queue                   Workers        │
+  │                                                                         │
+  │                                                         ┌──────────┐    │
+  │                                                         │          │    │
+  │                                                       ┌─┴────────┐ │    │
+  │                                                       │          │ │    │
+  │ ┌─────────────┐         ┌─────────────────┐         ┌─┴────────┐ │ │    │
+  │ │             │ Publish │                 │         │          │ │ │    │
+  │ │             │ task    │                 │         │          │ │ │    │
+  │ │   Task      ├─────────► Tasks channel   ├─────────►          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │ Publish │          │ │ │    │
+  │ │             │         │                 │ result  │          │ │ │    │
+  │ │ AsyncResult ◄─────────┤ Results channel ◄─────────┤          │ │ │    │
+  │ │             │         │                 │         │          │ │ │    │
+  │ │             │         │                 │         │          │ ├─┘    │
+  │ │             │         │                 │         │          │ │      │
+  │ │             │         │                 │         │          │ │      │
+  │ │             │         │                 │         │          ├─┘      │
+  │ │             │         │                 │         │          │        │
+  │ └─────────────┘         └─────────────────┘         └──────────┘        │
+  │                                                                         │
+  └─────────────────────────────────────────────────────────────────────────┘
+```
+
+1. App publishes a new task to Task Queue (Task channel) by calling `.apply_async()`
+2. One of the workers will pick up the task from Task Queue (Task channel)
+3. The worker will run the body of the task and publish return value to Task Queue (Results channel)
+4. Async Result picks up the result of the task from Task Queue (Results channel)
+5. App, Task Queue, and Workers are different processes. Workers may consist of 1 or more processes. Task Queue is currently only Redis.
+
+## Simple Usage
 Plus, it is also fully-typed for better productivity and correctness.
 
 Give it a try and let us know if you like it. For questions or feedback, feel free to file issues on this repository.
@@ -53,6 +97,7 @@ async def main():
     sync_result = some_task(42)
     assert async_result == sync_result
     print(f"sync_result == async_result == 165580141. Awesome!")
+
 
 
 if __name__ == "__main__":
